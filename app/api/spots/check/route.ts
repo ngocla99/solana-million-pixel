@@ -1,5 +1,5 @@
+import { checkCollision } from "@/features/pixels-grid/utils/collision";
 import { NextRequest, NextResponse } from "next/server";
-import { checkCollision } from "@/lib/collision";
 
 /**
  * POST /api/spots/check - Check if spots are available (collision detection)

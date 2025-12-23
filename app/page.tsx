@@ -1,10 +1,10 @@
 "use client";
 
-import { CanvasGrid } from "@/components/canvas/canvas-grid";
 import { GridHeader } from "@/components/layouts/grid-header";
-import { Sidebar } from "@/components/layouts/sidebar";
 import { useState, useCallback } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { CanvasGrid } from "@/features/pixels-grid/components/canvas-grid";
+import { Sidebar } from "@/components/layouts/sidebar";
 
 export default function Page() {
   const { publicKey } = useWallet();

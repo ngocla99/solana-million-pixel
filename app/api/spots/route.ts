@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { getAllSoldSpots } from "@/lib/collision";
+import { getAllSoldSpots } from "@/features/pixels-grid/utils/collision";
 
 /**
  * GET /api/spots - Fetch all sold spots for canvas rendering

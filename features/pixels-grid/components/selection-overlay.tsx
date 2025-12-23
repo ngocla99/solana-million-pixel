@@ -1,6 +1,6 @@
 "use client";
 
-import { getSelectionInfo, normalizeSelection } from "@/lib/grid-utils";
+import { getSelectionInfo, normalizeSelection } from "../utils/grid-utils";
 
 interface SelectionOverlayProps {
   selection: { startX: number; startY: number; endX: number; endY: number };

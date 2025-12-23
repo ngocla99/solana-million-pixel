@@ -1,4 +1,4 @@
-import { supabase, type Spot } from "./supabase";
+import { supabase, type Spot } from "@/lib/supabase";
 import { Selection } from "./grid-utils";
 
 /**

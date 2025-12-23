@@ -6,7 +6,7 @@ import {
   type Selection,
   getSelectionInfo,
   GRID_SIZE,
-} from "@/lib/grid-utils";
+} from "../utils/grid-utils";
 
 export interface GridInteractionState {
   hoveredSpot: { x: number; y: number } | null;

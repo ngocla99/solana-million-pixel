@@ -8,7 +8,7 @@ import {
   SPOT_SIZE,
   WORLD_SIZE,
   screenToGrid,
-} from "@/lib/grid-utils";
+} from "../utils/grid-utils";
 import {
   createGridContainer,
   renderGridLines,
@@ -22,7 +22,6 @@ import {
   type GridColors,
 } from "./grid-renderer";
 import { SpotTooltip } from "./spot-tooltip";
-import { SelectionOverlay } from "./selection-overlay";
 
 interface CanvasGridProps {
   onSelectionComplete?: (selection: {

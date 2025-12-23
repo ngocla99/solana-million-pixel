@@ -6,7 +6,7 @@ import {
   CHUNKS_PER_ROW,
   type Chunk,
   getVisibleChunks,
-} from "@/lib/grid-utils";
+} from "../utils/grid-utils";
 import type { Spot } from "@/lib/supabase";
 
 // Theme-aware colors (these will be passed from React component)

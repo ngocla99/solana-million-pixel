@@ -1,6 +1,6 @@
 "use client";
 
-import { GRID_SIZE } from "@/lib/grid-utils";
+import { GRID_SIZE } from "@/features/pixels-grid/utils/grid-utils";
 import { WalletButton } from "../ui/wallet-button";
 
 interface GridHeaderProps {
