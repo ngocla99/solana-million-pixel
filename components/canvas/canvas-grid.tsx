@@ -16,6 +16,8 @@ import {
   updateHoverHighlight,
   createSelectionOverlay,
   updateSelectionOverlay,
+  createSoldSpotsContainer,
+  renderSoldSpots,
   DEFAULT_COLORS,
   type GridColors,
 } from "./grid-renderer";
@@ -62,6 +64,7 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
   const appRef = useRef<Application | null>(null);
   const viewportRef = useRef<Viewport | null>(null);
   const gridContainerRef = useRef<Container | null>(null);
+  const soldSpotsContainerRef = useRef<Container | null>(null);
   const hoverHighlightRef = useRef<Graphics | null>(null);
   const selectionOverlayRef = useRef<Graphics | null>(null);
   const colorsRef = useRef<GridColors>(DEFAULT_COLORS);
@@ -155,6 +158,11 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
       viewport.addChild(gridContainer);
       gridContainerRef.current = gridContainer;
 
+      // Create sold spots container
+      const soldSpotsContainer = createSoldSpotsContainer();
+      viewport.addChild(soldSpotsContainer);
+      soldSpotsContainerRef.current = soldSpotsContainer;
+
       // Create hover highlight
       const hoverHighlight = createHoverHighlight();
       viewport.addChild(hoverHighlight);
@@ -194,6 +202,18 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
 
       viewport.on("moved", updateGridLines);
       viewport.on("zoomed", updateGridLines);
+
+      // Load and render sold spots
+      fetch("/api/spots")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.spots && soldSpotsContainer) {
+            renderSoldSpots(soldSpotsContainer, data.spots);
+          }
+        })
+        .catch((error) => {
+          console.error("Error loading sold spots:", error);
+        });
 
       // Handle window resize
       const handleResize = () => {

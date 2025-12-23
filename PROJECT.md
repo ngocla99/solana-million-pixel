@@ -1,6 +1,6 @@
 # Solana Pixel Grid (MVP)
 
-> **Last Updated**: 2025-12-23
+> **Last Updated**: 2025-12-23 (Milestone 3 Complete)
 
 ## 1. Executive Summary
 
@@ -64,7 +64,7 @@ Due to the grid size (1,000,000 interactive elements), standard HTML/DOM element
 
 ## 5. Development Milestones & Progress
 
-### Milestone 1: Setup & High-Performance Canvas ✅ IN PROGRESS
+### Milestone 1: Setup & High-Performance Canvas ✅ COMPLETE
 
 | Task                             | Status  | Notes                                   |
 | -------------------------------- | ------- | --------------------------------------- |
@@ -103,15 +103,25 @@ Due to the grid size (1,000,000 interactive elements), standard HTML/DOM element
 
 ---
 
-### Milestone 3: Multi-Spot Image Flow & Database ⬜ TODO
+### Milestone 3: Multi-Spot Image Flow & Database ✅ COMPLETE
 
-| Task                          | Status | Notes                          |
-| ----------------------------- | ------ | ------------------------------ |
-| Collision detection logic     | ⬜     | Block overlap prevention       |
-| Purchase Modal                | ⬜     | Image upload + URL input       |
-| Client-side image compression | ⬜     |                                |
-| Supabase schema setup         | ⬜     | coordinates, image URLs, links |
-| API routes                    | ⬜     |                                |
+| Task                          | Status  | Notes                                |
+| ----------------------------- | ------- | ------------------------------------ |
+| Collision detection logic     | ✅ Done | Accurate rectangle overlap check     |
+| Purchase Modal                | ✅ Done | Integrated with image/URL handling   |
+| Client-side image compression | ✅ Done | Auto-resize to fit spot dimensions   |
+| Supabase schema setup         | ✅ Done | `spots` table and storage configured |
+| API routes                    | ✅ Done | Upload and CRUD endpoints            |
+
+**Current Files:**
+
+- `lib/collision.ts` - Collision detection logic
+- `lib/image-utils.ts` - Image compression utilities
+- `components/ui/purchase-modal.tsx` - Spot purchase UI
+- `app/api/spots/route.ts` - Spots CRUD API
+- `app/api/spots/upload/route.ts` - Image upload API
+- `app/api/spots/check/route.ts` - Collision check API
+- `supabase/migrations/001_create_spots_table.sql` - Database schema
 
 ---
 
@@ -175,7 +185,7 @@ Blockchain:
 ```env
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 
 # Solana

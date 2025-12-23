@@ -1,4 +1,4 @@
-import { Container, Graphics } from "pixi.js";
+import { Assets, Container, Graphics, Sprite, Texture } from "pixi.js";
 import {
   GRID_SIZE,
   SPOT_SIZE,
@@ -7,6 +7,7 @@ import {
   type Chunk,
   getVisibleChunks,
 } from "@/lib/grid-utils";
+import type { Spot } from "@/lib/supabase";
 
 // Theme-aware colors (these will be passed from React component)
 export interface GridColors {
@@ -187,4 +188,78 @@ export function updateSelectionOverlay(
   overlay.rect(minX * SPOT_SIZE, minY * SPOT_SIZE, width, height);
   overlay.fill({ color: colors.selection, alpha: 0.2 });
   overlay.stroke({ width: 2, color: colors.selection, alpha: 0.8 });
+}
+
+/**
+ * Creates a container for sold spots
+ */
+export function createSoldSpotsContainer(): Container {
+  const container = new Container();
+  container.label = "sold-spots-container";
+  return container;
+}
+
+/**
+ * Renders sold spots with images
+ */
+export async function renderSoldSpots(
+  container: Container,
+  spots: Spot[]
+): Promise<void> {
+  // Clear existing sold spots
+  container.removeChildren();
+
+  for (const spot of spots) {
+    if (!spot.image_url) continue;
+
+    try {
+      // Load texture using Assets.load (PixiJS v8 API)
+      const texture = await Assets.load<Texture>({
+        src: spot.image_url,
+        loadParser: "loadTextures",
+        data: {
+          crossOrigin: "anonymous",
+        },
+      });
+
+      // Verify texture loaded successfully
+      if (!texture) {
+        throw new Error("Texture failed to load or is invalid");
+      }
+
+      // Create sprite from loaded texture
+      const sprite = new Sprite(texture);
+      sprite.x = spot.x * SPOT_SIZE;
+      sprite.y = spot.y * SPOT_SIZE;
+      sprite.width = spot.width * SPOT_SIZE;
+      sprite.height = spot.height * SPOT_SIZE;
+
+      // Make sprite interactive for clicking
+      sprite.eventMode = "static";
+      sprite.cursor = "pointer";
+      sprite.on("pointerdown", () => {
+        if (spot.link_url) {
+          window.open(spot.link_url, "_blank");
+        }
+      });
+
+      container.addChild(sprite);
+    } catch (error) {
+      console.error(
+        `Failed to load image for spot at (${spot.x}, ${spot.y}):`,
+        error
+      );
+
+      // Draw a placeholder rectangle if image fails to load
+      const placeholder = new Graphics();
+      placeholder.rect(
+        spot.x * SPOT_SIZE,
+        spot.y * SPOT_SIZE,
+        spot.width * SPOT_SIZE,
+        spot.height * SPOT_SIZE
+      );
+      placeholder.fill({ color: 0xcccccc, alpha: 0.5 });
+      container.addChild(placeholder);
+    }
+  }
 }
