@@ -25,29 +25,15 @@ export function SpotTooltip({
         top: screenY + 16,
       }}
     >
-      <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg px-3 py-2 shadow-xl">
-        <div className="flex items-center gap-2">
-          <div
-            className={`w-3 h-3 rounded-full ${
-              sold ? "bg-destructive" : "bg-primary"
-            }`}
-          />
-          <span className="text-foreground text-sm font-medium">
-            Spot ({x}, {y})
-          </span>
-        </div>
-        <div className="text-muted-foreground text-xs mt-1">
+      <div className="bg-zinc-900 border border-white/10 px-2 py-1 rounded text-[10px] text-zinc-400 whitespace-nowrap shadow-xl flex items-center gap-2">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+        <span>
+          Spot ({x}, {y})
+        </span>
+        <span className="opacity-50">|</span>
+        <span className={sold ? "text-rose-400" : "text-emerald-400"}>
           {sold ? "Sold" : "Available"}
-        </div>
-        {imageUrl && (
-          <div className="mt-2">
-            <img
-              src={imageUrl}
-              alt="Spot preview"
-              className="w-24 h-24 object-cover rounded"
-            />
-          </div>
-        )}
+        </span>
       </div>
     </div>
   );

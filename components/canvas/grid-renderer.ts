@@ -20,15 +20,15 @@ export interface GridColors {
   worldBorder: number;
 }
 
-// Default light theme colors (matching CSS variables)
+// Default dark theme colors (matching SOLGRID design)
 export const DEFAULT_COLORS: GridColors = {
-  background: 0xffffff, // White background
-  gridLine: 0xe5e5e5, // Light gray grid lines
-  spotAvailable: 0xf5f5f5, // Very light gray
-  spotHover: 0xd1fae5, // Light teal hover
-  selection: 0x10b981, // Teal selection
-  highlight: 0x059669, // Darker teal highlight
-  worldBorder: 0xcccccc, // Light gray world border
+  background: 0x09090b, // Zinc-950
+  gridLine: 0x1f1f2e, // Subtle grid lines
+  spotAvailable: 0x141420, // Slightly lighter than background
+  spotHover: 0x1a3a2e, // Dark teal hover
+  selection: 0x9945ff, // Solana Purple
+  highlight: 0x14f195, // Solana Green
+  worldBorder: 0x27272a, // Zinc-800
 };
 
 /**

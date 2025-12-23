@@ -114,7 +114,7 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
       const bgColor = `#${colors.background.toString(16).padStart(6, "0")}`;
 
       await app.init({
-        background: "#f3f4f6", // Contrast with white grid background
+        background: "#09090b", // Match background from mock
         resizeTo: containerRef.current!,
         antialias: true,
         resolution: window.devicePixelRatio || 1,
@@ -419,13 +419,25 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
     );
   }, []);
 
+  // Zoom control handlers
+  const handleZoomIn = useCallback(() => {
+    viewportRef.current?.zoom(-WORLD_SIZE * 0.05, true);
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    viewportRef.current?.zoom(WORLD_SIZE * 0.05, true);
+  }, []);
+
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full group">
       <div
         ref={containerRef}
-        className="w-full h-full cursor-crosshair"
+        className="w-full h-full cursor-crosshair bg-zinc-950"
         style={{ touchAction: "none" }}
       />
+
+      {/* Grid Pattern Overlay (Optional, visually enhances background before Pixi loads) */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
 
       {/* Tooltip */}
       {hoveredSpot && (
@@ -437,16 +449,50 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
         />
       )}
 
-      {/* Selection Info */}
-      {selection && !isSelecting && (
-        <SelectionOverlay
-          selection={selection}
-          onClear={clearSelection}
-          onConfirm={() => {
-            onSelectionComplete?.(selection);
-          }}
-        />
-      )}
+      {/* Zoom Controls Overlay */}
+      <div className="absolute bottom-6 left-6 flex flex-col gap-4 pointer-events-none">
+        <div className="bg-zinc-900/90 backdrop-blur border border-white/10 p-1 rounded-lg pointer-events-auto flex flex-col gap-1 shadow-2xl">
+          <button
+            onClick={handleZoomIn}
+            className="p-2 hover:bg-white/5 rounded text-zinc-400 hover:text-white transition-colors"
+            title="Zoom In"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </button>
+          <button
+            onClick={handleZoomOut}
+            className="p-2 hover:bg-white/5 rounded text-zinc-400 hover:text-white transition-colors"
+            title="Zoom Out"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

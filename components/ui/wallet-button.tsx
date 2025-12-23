@@ -38,23 +38,22 @@ export function WalletButton() {
     return (
       <button
         onClick={handleConnect}
-        className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-colors flex items-center gap-2"
+        className="group flex items-center gap-2 bg-white text-black hover:bg-zinc-200 px-3 py-1.5 rounded text-xs font-medium transition-all shadow-[0_0_10px_rgba(255,255,255,0.1)]"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="w-5 h-5"
-          fill="none"
+          className="w-3.5 h-3.5"
           viewBox="0 0 24 24"
+          fill="none"
           stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"
-          />
+          <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" />
+          <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
         </svg>
-        Connect Wallet
+        <span>Connect Wallet</span>
       </button>
     );
   }
@@ -67,31 +66,15 @@ export function WalletButton() {
     <div className="relative">
       <button
         onClick={() => setDropdownOpen(!dropdownOpen)}
-        className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-colors flex items-center gap-2"
+        className="group flex items-center gap-2 bg-white text-black hover:bg-zinc-200 px-3 py-1.5 rounded text-xs font-medium transition-all shadow-[0_0_10px_rgba(255,255,255,0.1)]"
       >
-        <div className="w-2 h-2 bg-green-400 rounded-full" />
+        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
         <span>{truncatedAddress}</span>
         {balance !== null && (
-          <span className="text-primary-foreground/80 text-sm">
+          <span className="text-zinc-500 text-[10px] ml-1">
             {balance.toFixed(2)} SOL
           </span>
         )}
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className={`w-4 h-4 transition-transform ${
-            dropdownOpen ? "rotate-180" : ""
-          }`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
       </button>
 
       {dropdownOpen && (

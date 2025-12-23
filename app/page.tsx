@@ -1,8 +1,8 @@
 "use client";
 
 import { CanvasGrid } from "@/components/canvas/canvas-grid";
-import { GridHeader } from "@/components/ui/grid-header";
-import { PurchaseModal } from "@/components/ui/purchase-modal";
+import { GridHeader } from "@/components/layouts/grid-header";
+import { Sidebar } from "@/components/layouts/sidebar";
 import { useState, useCallback } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 
@@ -14,16 +14,18 @@ export default function Page() {
     endX: number;
     endY: number;
   } | null>(null);
-  const [showModal, setShowModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
 
   const handleSelectionComplete = useCallback(async (sel: typeof selection) => {
-    if (!sel) return;
+    if (!sel) {
+      setSelection(null);
+      return;
+    }
 
     setIsChecking(true);
 
     try {
-      // Check for collisions
       const response = await fetch("/api/spots/check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -40,9 +42,7 @@ export default function Page() {
         return;
       }
 
-      // If available, show purchase modal
       setSelection(sel);
-      setShowModal(true);
     } catch (error) {
       console.error("Error checking spots:", error);
       alert("Failed to check spot availability. Please try again.");
@@ -51,36 +51,33 @@ export default function Page() {
     }
   }, []);
 
-  const handleModalClose = useCallback(() => {
-    setShowModal(false);
-    setSelection(null);
-  }, []);
-
   const handlePurchaseSubmit = useCallback(
-    async (data: { image: File; linkUrl: string }) => {
+    async (data: { image: File | null; linkUrl: string }) => {
       if (!selection || !publicKey) {
         alert("Please connect your wallet first");
         return;
       }
 
+      setIsSubmitting(true);
       try {
-        // 1. Upload image to Supabase Storage
-        const formData = new FormData();
-        formData.append("file", data.image);
-        formData.append("spotId", `${selection.startX}-${selection.startY}`);
+        let imageUrl = "";
 
-        const uploadResponse = await fetch("/api/spots/upload", {
-          method: "POST",
-          body: formData,
-        });
+        // Handle image upload if provided (Sidebar might need actual file input eventually)
+        if (data.image) {
+          const formData = new FormData();
+          formData.append("file", data.image);
+          formData.append("spotId", `${selection.startX}-${selection.startY}`);
 
-        if (!uploadResponse.ok) {
-          throw new Error("Failed to upload image");
+          const uploadResponse = await fetch("/api/spots/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!uploadResponse.ok) throw new Error("Failed to upload image");
+          const uploadData = await uploadResponse.json();
+          imageUrl = uploadData.url;
         }
 
-        const { url: imageUrl } = await uploadResponse.json();
-
-        // 2. Create spot in database
         const width = Math.abs(selection.endX - selection.startX) + 1;
         const height = Math.abs(selection.endY - selection.startY) + 1;
 
@@ -98,47 +95,51 @@ export default function Page() {
           }),
         });
 
-        if (!createResponse.ok) {
-          throw new Error("Failed to create spot");
-        }
+        if (!createResponse.ok) throw new Error("Failed to create spot");
 
         alert(
           "Spot purchased successfully! (Payment integration coming in Milestone 4)"
         );
-        handleModalClose();
-
-        // Refresh the page to show the new spot
+        setSelection(null);
         window.location.reload();
       } catch (error) {
         console.error("Error purchasing spot:", error);
-        throw error;
+        alert("Failed to purchase spot. Please try again.");
+      } finally {
+        setIsSubmitting(false);
       }
     },
-    [selection, publicKey, handleModalClose]
+    [selection, publicKey]
   );
 
   return (
-    <main className="h-screen w-screen overflow-hidden bg-background">
+    <div className="flex flex-col h-screen w-full relative bg-zinc-950">
       <GridHeader />
-      <div className="pt-16 h-full">
-        <CanvasGrid onSelectionComplete={handleSelectionComplete} />
-      </div>
 
-      {showModal && (
-        <PurchaseModal
+      <main className="flex-1 flex overflow-hidden pt-14 relative">
+        {/* Left: Infinite Canvas */}
+        <div className="flex-1 bg-zinc-950 relative overflow-hidden">
+          <CanvasGrid onSelectionComplete={handleSelectionComplete} />
+        </div>
+
+        {/* Right: Interaction Sidebar */}
+        <Sidebar
           selection={selection}
-          onClose={handleModalClose}
           onSubmit={handlePurchaseSubmit}
+          isSubmitting={isSubmitting}
         />
-      )}
+      </main>
 
       {isChecking && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30">
-          <div className="bg-background rounded-lg p-6 shadow-lg">
-            <p className="text-sm">Checking spot availability...</p>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all animate-in fade-in">
+          <div className="bg-zinc-900 border border-white/10 rounded-lg p-6 shadow-2xl flex flex-col items-center gap-4">
+            <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm font-medium text-zinc-300">
+              Checking spot availability...
+            </p>
           </div>
         </div>
       )}
-    </main>
+    </div>
   );
 }
