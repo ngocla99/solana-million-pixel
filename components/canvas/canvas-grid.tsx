@@ -111,7 +111,7 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
       const bgColor = `#${colors.background.toString(16).padStart(6, "0")}`;
 
       await app.init({
-        background: bgColor,
+        background: "#f3f4f6", // Contrast with white grid background
         resizeTo: containerRef.current!,
         antialias: true,
         resolution: window.devicePixelRatio || 1,
@@ -280,11 +280,15 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
 
       // Update selection if dragging with left button
       if (isSelecting && selectionStartRef.current) {
+        // Clamp endX and endY to valid grid bounds to prevent border going outside canvas
+        const clampedEndX = Math.max(0, Math.min(GRID_SIZE - 1, gridPos.x));
+        const clampedEndY = Math.max(0, Math.min(GRID_SIZE - 1, gridPos.y));
+
         const newSelection = {
           startX: selectionStartRef.current.x,
           startY: selectionStartRef.current.y,
-          endX: gridPos.x,
-          endY: gridPos.y,
+          endX: clampedEndX,
+          endY: clampedEndY,
         };
         setSelection(newSelection);
         updateSelectionOverlay(

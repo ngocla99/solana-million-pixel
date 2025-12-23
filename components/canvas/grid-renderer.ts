@@ -16,6 +16,7 @@ export interface GridColors {
   spotHover: number;
   selection: number;
   highlight: number;
+  worldBorder: number;
 }
 
 // Default light theme colors (matching CSS variables)
@@ -26,6 +27,7 @@ export const DEFAULT_COLORS: GridColors = {
   spotHover: 0xd1fae5, // Light teal hover
   selection: 0x10b981, // Teal selection
   highlight: 0x059669, // Darker teal highlight
+  worldBorder: 0xcccccc, // Light gray world border
 };
 
 /**
@@ -38,10 +40,11 @@ export function createGridContainer(
   container.label = "grid-container";
   container.cullable = true;
 
-  // Create background
+  // Create background and border
   const background = new Graphics();
   background.rect(0, 0, GRID_SIZE * SPOT_SIZE, GRID_SIZE * SPOT_SIZE);
   background.fill(colors.background);
+  background.stroke({ width: 4, color: colors.worldBorder }); // Thicker border for visibility
   container.addChild(background);
 
   return container;
