@@ -5,6 +5,7 @@ import { useState, useCallback } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { CanvasGrid } from "@/features/pixels-grid/components/canvas-grid";
 import { Sidebar } from "@/components/layouts/sidebar";
+import { SidebarProvider } from "@/features/pixels-grid/context/sidebar-context";
 
 export default function Page() {
   const { publicKey } = useWallet();
@@ -113,33 +114,34 @@ export default function Page() {
   );
 
   return (
-    <div className="flex flex-col h-screen w-full relative bg-zinc-950">
-      <GridHeader />
+    <SidebarProvider initialSelection={selection}>
+      <div className="flex flex-col h-screen w-full relative bg-zinc-950">
+        <GridHeader />
 
-      <main className="flex-1 flex overflow-hidden pt-14 relative">
-        {/* Left: Infinite Canvas */}
-        <div className="flex-1 bg-zinc-950 relative overflow-hidden">
-          <CanvasGrid onSelectionComplete={handleSelectionComplete} />
-        </div>
-
-        {/* Right: Interaction Sidebar */}
-        <Sidebar
-          selection={selection}
-          onSubmit={handlePurchaseSubmit}
-          isSubmitting={isSubmitting}
-        />
-      </main>
-
-      {isChecking && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all animate-in fade-in">
-          <div className="bg-zinc-900 border border-white/10 rounded-lg p-6 shadow-2xl flex flex-col items-center gap-4">
-            <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm font-medium text-zinc-300">
-              Checking spot availability...
-            </p>
+        <main className="flex-1 flex overflow-hidden pt-14 relative">
+          {/* Left: Infinite Canvas */}
+          <div className="flex-1 bg-zinc-950 relative overflow-hidden">
+            <CanvasGrid onSelectionComplete={handleSelectionComplete} />
           </div>
-        </div>
-      )}
-    </div>
+
+          {/* Right: Interaction Sidebar */}
+          <Sidebar
+            onSubmit={handlePurchaseSubmit}
+            isSubmitting={isSubmitting}
+          />
+        </main>
+
+        {isChecking && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all animate-in fade-in">
+            <div className="bg-zinc-900 border border-white/10 rounded-lg p-6 shadow-2xl flex flex-col items-center gap-4">
+              <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm font-medium text-zinc-300">
+                Checking spot availability...
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </SidebarProvider>
   );
 }
