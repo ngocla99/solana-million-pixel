@@ -1,0 +1,106 @@
+import { env } from "@/config/env";
+
+type RequestOptions = {
+  method?: string;
+  headers?: Record<string, string>;
+  body?: any;
+  params?: Record<string, string | number | boolean | undefined | null>;
+  cache?: RequestCache;
+  next?: NextFetchRequestConfig;
+  signal?: AbortSignal; // 👈 allow aborting
+};
+
+function buildUrlWithParams(
+  url: string,
+  params?: RequestOptions["params"]
+): string {
+  if (!params) return url;
+  const filteredParams = Object.fromEntries(
+    Object.entries(params).filter(
+      ([, value]) => value !== undefined && value !== null
+    )
+  );
+  if (Object.keys(filteredParams).length === 0) return url;
+  const queryString = new URLSearchParams(
+    filteredParams as Record<string, string>
+  ).toString();
+  return `${url}?${queryString}`;
+}
+
+async function fetchApi<T>(
+  url: string,
+  options: RequestOptions = {}
+): Promise<T> {
+  const {
+    method = "GET",
+    headers = {},
+    body,
+    params,
+    cache = "no-store",
+    next,
+    signal,
+  } = options;
+
+  const fullUrl = buildUrlWithParams(
+    `${env.NEXT_PUBLIC_BASE_API_URL}${url}`,
+    params
+  );
+
+  console.log("fullUrl", fullUrl);
+
+  // Detect if body is FormData for file uploads
+  const isFormData = body instanceof FormData;
+
+  const response = await fetch(fullUrl, {
+    method,
+    headers: {
+      // Only set Content-Type for JSON, let browser set it for FormData
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
+      Accept: "application/json",
+      ...headers,
+    },
+    // Don't stringify FormData, pass it directly
+    body: isFormData ? body : body ? JSON.stringify(body) : undefined,
+    credentials: "include",
+    cache,
+    next,
+    signal,
+  });
+
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
+    const message = errorData.error || errorData.message || response.statusText;
+
+    // Create error object with additional metadata for rate limiting
+    const error: any = new Error(message);
+    error.status = response.status;
+    error.data = errorData; // Preserve full error response (limit, current, resetAt, etc.)
+
+    throw error;
+  }
+
+  return response.json();
+}
+
+const api = {
+  get<T>(url: string, options?: RequestOptions): Promise<T> {
+    return fetchApi<T>(url, { ...options, method: "GET" });
+  },
+  post<T>(url: string, body?: any, options?: RequestOptions): Promise<T> {
+    return fetchApi<T>(url, { ...options, method: "POST", body });
+  },
+  put<T>(url: string, body?: any, options?: RequestOptions): Promise<T> {
+    return fetchApi<T>(url, { ...options, method: "PUT", body });
+  },
+  patch<T>(url: string, body?: any, options?: RequestOptions): Promise<T> {
+    return fetchApi<T>(url, { ...options, method: "PATCH", body });
+  },
+  delete<T>(url: string, options?: RequestOptions): Promise<T> {
+    return fetchApi<T>(url, { ...options, method: "DELETE" });
+  },
+};
+
+// Export as default for compatibility with existing imports
+export default api;

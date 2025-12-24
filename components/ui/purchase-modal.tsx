@@ -1,19 +1,22 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { env } from "@/config/env";
+import { getSelectionInfo } from "@/features/pixels-grid/utils/grid-utils";
 import {
-  X,
-  Upload,
-  Link as LinkIcon,
+  compressImage,
+  isValidImageType,
+} from "@/features/pixels-grid/utils/image-utils";
+import {
   Image as ImageIcon,
+  Link as LinkIcon,
+  Upload,
+  X,
 } from "@phosphor-icons/react";
+import { useCallback, useRef, useState } from "react";
 import { Button } from "./button";
+import { Card } from "./card";
 import { Input } from "./input";
 import { Label } from "./label";
-import { Card } from "./card";
-import { Badge } from "./badge";
-import { compressImage, isValidImageType } from "@/lib/image-utils";
-import { getSelectionInfo } from "@/lib/grid-utils";
 
 interface PurchaseModalProps {
   selection: {
@@ -42,9 +45,7 @@ export function PurchaseModal({
   if (!selection) return null;
 
   const selectionInfo = getSelectionInfo(selection);
-  const spotPrice = parseFloat(
-    process.env.NEXT_PUBLIC_SPOT_PRICE_SOL || "0.01"
-  );
+  const spotPrice = parseFloat(env.NEXT_PUBLIC_SPOT_PRICE_SOL);
   const totalPrice = selectionInfo.totalSpots * spotPrice;
 
   const handleImageSelect = useCallback(

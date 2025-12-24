@@ -11,6 +11,7 @@ import {
   SolflareWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl } from "@solana/web3.js";
+import { env } from "@/config/env";
 
 // Import wallet adapter styles
 import "@solana/wallet-adapter-react-ui/styles.css";
@@ -21,14 +22,11 @@ interface WalletProviderProps {
 
 export function WalletProvider({ children }: WalletProviderProps) {
   // Get network from env or default to devnet
-  const network = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet") as
-    | "devnet"
-    | "testnet"
-    | "mainnet-beta";
+  const network = env.NEXT_PUBLIC_SOLANA_NETWORK;
 
   // Get RPC endpoint from env or use default
   const endpoint = useMemo(
-    () => process.env.NEXT_PUBLIC_SOLANA_RPC_URL || clusterApiUrl(network),
+    () => env.NEXT_PUBLIC_SOLANA_RPC_URL || clusterApiUrl(network),
     [network]
   );
 

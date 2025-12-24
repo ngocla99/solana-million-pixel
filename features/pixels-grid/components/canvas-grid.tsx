@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Application, Container, Graphics } from "pixi.js";
 import { Viewport } from "pixi-viewport";
@@ -22,6 +20,7 @@ import {
   type GridColors,
 } from "./grid-renderer";
 import { SpotTooltip } from "./spot-tooltip";
+import { useSpots } from "../api/get-spots";
 
 interface CanvasGridProps {
   onSelectionComplete?: (selection: {
@@ -84,6 +83,9 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
     y: number;
   }>({ x: 0, y: 0 });
   const selectionStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  // Fetch spots using TanStack Query
+  const { data: spotsData } = useSpots();
 
   // Get current viewport state for coordinate conversion
   const getViewportState = useCallback(() => {
@@ -202,18 +204,6 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
       viewport.on("moved", updateGridLines);
       viewport.on("zoomed", updateGridLines);
 
-      // Load and render sold spots
-      fetch("/api/spots")
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.spots && soldSpotsContainer) {
-            renderSoldSpots(soldSpotsContainer, data.spots);
-          }
-        })
-        .catch((error) => {
-          console.error("Error loading sold spots:", error);
-        });
-
       // Handle window resize
       const handleResize = () => {
         if (app && viewport && containerRef.current) {
@@ -246,6 +236,13 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
       }
     };
   }, []);
+
+  // Render sold spots when data is available
+  useEffect(() => {
+    if (spotsData?.spots && soldSpotsContainerRef.current) {
+      renderSoldSpots(soldSpotsContainerRef.current, spotsData.spots);
+    }
+  }, [spotsData]);
 
   // Handle mouse events
   useEffect(() => {

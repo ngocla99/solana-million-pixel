@@ -1,14 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { getAllSoldSpots } from "@/features/pixels-grid/utils/collision";
 
 /**
  * GET /api/spots - Fetch all sold spots for canvas rendering
  */
 export async function GET() {
   try {
-    const spots = await getAllSoldSpots();
-    return NextResponse.json({ spots });
+    const { data: spots, error } = await supabaseAdmin
+      .from("spots")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching spots:", error);
+      return NextResponse.json(
+        { error: "Failed to fetch spots", details: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ spots: spots || [] });
   } catch (error) {
     console.error("Error fetching spots:", error);
     return NextResponse.json(

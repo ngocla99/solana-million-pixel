@@ -1,4 +1,5 @@
-import { supabase, type Spot } from "@/lib/supabase";
+import api from "@/lib/api-client";
+import type { Spot } from "@/lib/supabase";
 import { Selection } from "./grid-utils";
 
 /**
@@ -22,12 +23,7 @@ export async function checkCollision(
   //
   // Since Supabase doesn't support computed columns in queries easily,
   // we fetch spots that COULD potentially overlap and filter in code
-  const { data: spots, error } = await supabase.from("spots").select("*");
-
-  if (error) {
-    console.error("Error checking collision:", error);
-    throw new Error("Failed to check spot availability");
-  }
+  const { spots } = await api.get<{ spots: Spot[] }>("/spots");
 
   // Filter for actual overlaps - a spot overlaps if the rectangles intersect
   const conflictingSpots = (spots || []).filter((spot) => {
@@ -60,35 +56,18 @@ export async function getOccupiedSpots(
   endX: number,
   endY: number
 ): Promise<Spot[]> {
-  const { data: spots, error } = await supabase
-    .from("spots")
-    .select("*")
-    .gte("x", startX)
-    .lte("x", endX)
-    .gte("y", startY)
-    .lte("y", endY);
+  try {
+    const { spots } = await api.get<{ spots: Spot[] }>("/spots");
 
-  if (error) {
+    // Filter spots in the specified region
+    const occupiedSpots = (spots || []).filter(
+      (spot) =>
+        spot.x >= startX && spot.x <= endX && spot.y >= startY && spot.y <= endY
+    );
+
+    return occupiedSpots;
+  } catch (error) {
     console.error("Error fetching occupied spots:", error);
     return [];
   }
-
-  return spots || [];
-}
-
-/**
- * Get all sold spots for canvas rendering
- */
-export async function getAllSoldSpots(): Promise<Spot[]> {
-  const { data: spots, error } = await supabase
-    .from("spots")
-    .select("*")
-    .order("created_at", { ascending: true });
-
-  if (error) {
-    console.error("Error fetching all spots:", error);
-    return [];
-  }
-
-  return spots || [];
 }
