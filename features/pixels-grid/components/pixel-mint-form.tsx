@@ -11,10 +11,14 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { useSidebar } from "../context/sidebar-context";
+import {
+  useBlockSize,
+  setBlockSize,
+  type BlockSize,
+  useSelection,
+} from "../stores/use-grid-store";
 
 const formSchema = z.object({
-  blockSize: z.enum(["1x1", "2x2", "5x5"]),
   image: z
     .instanceof(File, { message: "Please upload an image" })
     .refine((file) => file.size > 0, "Please upload an image"),
@@ -29,8 +33,9 @@ interface PixelMintFormProps {
 }
 
 export function PixelMintForm({ onSubmit, isSubmitting }: PixelMintFormProps) {
-  const { selection } = useSidebar();
   const [previewUrl, setPreviewUrl] = useState("");
+  const blockSize = useBlockSize();
+  const selection = useSelection();
 
   const x = selection ? Math.min(selection.startX, selection.endX) : 0;
   const y = selection ? Math.min(selection.startY, selection.endY) : 0;
@@ -45,7 +50,6 @@ export function PixelMintForm({ onSubmit, isSubmitting }: PixelMintFormProps) {
 
   const form = useForm({
     defaultValues: {
-      blockSize: "1x1",
       image: null as File | null,
       linkUrl: "",
     },
@@ -107,33 +111,29 @@ export function PixelMintForm({ onSubmit, isSubmitting }: PixelMintFormProps) {
             </h2>
 
             {/* Block Size Selector */}
-            <form.Field name="blockSize">
-              {(field) => (
-                <Field>
-                  <div className="flex justify-between text-xs text-zinc-400">
-                    <span>Block Size</span>
-                    <span className="text-white">{field.state.value}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    {(["1x1", "2x2", "5x5"] as const).map((size) => (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => field.handleChange(size)}
-                        className={cn(
-                          "flex-1 py-1.5 text-xs rounded transition-colors border",
-                          field.state.value === size
-                            ? "border-purple-500/50 bg-purple-500/10 text-white"
-                            : "border-white/10 bg-zinc-900 text-zinc-400 hover:border-white/20"
-                        )}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </Field>
-              )}
-            </form.Field>
+            <Field>
+              <div className="flex justify-between text-xs text-zinc-400">
+                <span>Block Size</span>
+                <span className="text-white">{blockSize}</span>
+              </div>
+              <div className="flex gap-2">
+                {(["1x1", "2x2", "5x5"] as const).map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => setBlockSize(size)}
+                    className={cn(
+                      "flex-1 py-1.5 text-xs rounded transition-colors border",
+                      blockSize === size
+                        ? "border-purple-500/50 bg-purple-500/10 text-white"
+                        : "border-white/10 bg-zinc-900 text-zinc-400 hover:border-white/20"
+                    )}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </Field>
 
             {/* Image Upload */}
             <form.Field name="image">

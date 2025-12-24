@@ -10,7 +10,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ onSubmit, isSubmitting }: SidebarProps) {
-  const { selection, activeTab, setActiveTab } = useSidebar();
+  const { activeTab, setActiveTab } = useSidebar();
 
   return (
     <aside className="w-80 bg-zinc-950 border-l border-white/5 flex flex-col z-20 shadow-2xl overflow-hidden">

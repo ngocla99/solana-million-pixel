@@ -21,6 +21,23 @@ import {
 } from "./grid-renderer";
 import { SpotTooltip } from "./spot-tooltip";
 import { useSpots } from "../api/get-spots";
+import {
+  setSelection as setStoreSelection,
+  useBlockSize,
+  type BlockSize,
+} from "../stores/use-grid-store";
+
+// Helper to get block size number from BlockSize type
+function getBlockSizeNumber(blockSize: BlockSize): number {
+  switch (blockSize) {
+    case "2x2":
+      return 2;
+    case "5x5":
+      return 5;
+    default:
+      return 1;
+  }
+}
 
 interface CanvasGridProps {
   onSelectionComplete?: (selection: {
@@ -66,6 +83,10 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
   const hoverHighlightRef = useRef<Graphics | null>(null);
   const selectionOverlayRef = useRef<Graphics | null>(null);
   const colorsRef = useRef<GridColors>(DEFAULT_COLORS);
+
+  // Get block size from Zustand store
+  const blockSize = useBlockSize();
+  const blockSizeNum = getBlockSizeNumber(blockSize);
 
   const [hoveredSpot, setHoveredSpot] = useState<{
     x: number;
@@ -268,20 +289,24 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
         scale
       );
 
-      // Update hovered spot
+      // Update hovered spot - snap to block size grid
       if (
         gridPos.x >= 0 &&
         gridPos.x < GRID_SIZE &&
         gridPos.y >= 0 &&
         gridPos.y < GRID_SIZE
       ) {
-        setHoveredSpot(gridPos);
+        // Snap hover to block size aligned grid
+        const snappedX = Math.floor(gridPos.x / blockSizeNum) * blockSizeNum;
+        const snappedY = Math.floor(gridPos.y / blockSizeNum) * blockSizeNum;
+        setHoveredSpot({ x: snappedX, y: snappedY });
         updateHoverHighlight(
           hoverHighlightRef.current!,
-          gridPos.x,
-          gridPos.y,
+          snappedX,
+          snappedY,
           true,
-          colorsRef.current
+          colorsRef.current,
+          blockSizeNum
         );
       } else {
         setHoveredSpot(null);
@@ -290,15 +315,24 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
           0,
           0,
           false,
-          colorsRef.current
+          colorsRef.current,
+          blockSizeNum
         );
       }
 
       // Update selection if dragging with left button
       if (isSelecting && selectionStartRef.current) {
-        // Clamp endX and endY to valid grid bounds to prevent border going outside canvas
-        const clampedEndX = Math.max(0, Math.min(GRID_SIZE - 1, gridPos.x));
-        const clampedEndY = Math.max(0, Math.min(GRID_SIZE - 1, gridPos.y));
+        // Snap end position to block size grid
+        const snappedEndX =
+          Math.floor(gridPos.x / blockSizeNum) * blockSizeNum +
+          blockSizeNum -
+          1;
+        const snappedEndY =
+          Math.floor(gridPos.y / blockSizeNum) * blockSizeNum +
+          blockSizeNum -
+          1;
+        const clampedEndX = Math.max(0, Math.min(GRID_SIZE - 1, snappedEndX));
+        const clampedEndY = Math.max(0, Math.min(GRID_SIZE - 1, snappedEndY));
 
         const newSelection = {
           startX: selectionStartRef.current.x,
@@ -345,13 +379,20 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
         gridPos.y >= 0 &&
         gridPos.y < GRID_SIZE
       ) {
-        selectionStartRef.current = gridPos;
+        // Calculate selection based on block size
+        // Snap to grid aligned with block size and clamp to grid bounds
+        const startX = Math.floor(gridPos.x / blockSizeNum) * blockSizeNum;
+        const startY = Math.floor(gridPos.y / blockSizeNum) * blockSizeNum;
+        const endX = Math.min(startX + blockSizeNum - 1, GRID_SIZE - 1);
+        const endY = Math.min(startY + blockSizeNum - 1, GRID_SIZE - 1);
+
+        selectionStartRef.current = { x: startX, y: startY };
         setIsSelecting(true);
         const newSelection = {
-          startX: gridPos.x,
-          startY: gridPos.y,
-          endX: gridPos.x,
-          endY: gridPos.y,
+          startX,
+          startY,
+          endX,
+          endY,
         };
         setSelection(newSelection);
         updateSelectionOverlay(
@@ -371,6 +412,8 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
 
       if (isSelecting && selection) {
         setIsSelecting(false);
+        // Sync selection with Zustand store
+        setStoreSelection(selection);
         onSelectionComplete?.(selection);
       }
     };
@@ -397,7 +440,13 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
       container.removeEventListener("pointerup", handlePointerUp);
       container.removeEventListener("pointerleave", handlePointerLeave);
     };
-  }, [getViewportState, isSelecting, selection, onSelectionComplete]);
+  }, [
+    getViewportState,
+    isSelecting,
+    selection,
+    onSelectionComplete,
+    blockSizeNum,
+  ]);
 
   // Clear selection handler
   const clearSelection = useCallback(() => {

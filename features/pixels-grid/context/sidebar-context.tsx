@@ -1,25 +1,10 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  type ReactNode,
-} from "react";
-
-export type Selection = {
-  startX: number;
-  startY: number;
-  endX: number;
-  endY: number;
-} | null;
+import { createContext, useContext, useState, type ReactNode } from "react";
 
 type ActiveTab = "selected" | "my-pixels" | "leaderboard";
 
 interface SidebarContextValue {
-  selection: Selection;
-  setSelection: (selection: Selection) => void;
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
 }
@@ -38,26 +23,14 @@ export function useSidebar() {
 
 interface SidebarProviderProps {
   children: ReactNode;
-  initialSelection?: Selection;
 }
 
-export function SidebarProvider({
-  children,
-  initialSelection = null,
-}: SidebarProviderProps) {
-  const [selection, setSelection] = useState<Selection>(initialSelection);
+export function SidebarProvider({ children }: SidebarProviderProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>("selected");
-
-  // Sync with external selection changes
-  useEffect(() => {
-    setSelection(initialSelection);
-  }, [initialSelection]);
 
   return (
     <SidebarContext.Provider
       value={{
-        selection,
-        setSelection,
         activeTab,
         setActiveTab,
       }}

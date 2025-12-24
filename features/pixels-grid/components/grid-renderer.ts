@@ -129,7 +129,8 @@ export function updateHoverHighlight(
   gridX: number,
   gridY: number,
   visible: boolean,
-  colors: GridColors = DEFAULT_COLORS
+  colors: GridColors = DEFAULT_COLORS,
+  blockSize: number = 1
 ): void {
   highlight.clear();
 
@@ -139,7 +140,8 @@ export function updateHoverHighlight(
   }
 
   highlight.visible = true;
-  highlight.rect(gridX * SPOT_SIZE, gridY * SPOT_SIZE, SPOT_SIZE, SPOT_SIZE);
+  const size = SPOT_SIZE * blockSize;
+  highlight.rect(gridX * SPOT_SIZE, gridY * SPOT_SIZE, size, size);
   highlight.fill({ color: colors.spotHover, alpha: 0.6 });
   highlight.stroke({ width: 2, color: colors.highlight });
 }
