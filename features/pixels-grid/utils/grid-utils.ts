@@ -13,16 +13,6 @@ export interface Selection {
   endY: number;
 }
 
-// Spot interface
-export interface Spot {
-  x: number;
-  y: number;
-  sold: boolean;
-  imageUrl?: string;
-  linkUrl?: string;
-  owner?: string;
-}
-
 // Chunk interface for efficient rendering
 export interface Chunk {
   chunkX: number;

@@ -1,29 +1,20 @@
 "use client";
 
 import { GRID_SIZE } from "@/features/pixels-grid/utils/grid-utils";
+import { useStats } from "@/features/pixels-grid/api/get-stats";
 import { WalletButton } from "../ui/wallet-button";
+import { CircleNotchIcon } from "@phosphor-icons/react";
 
-interface GridHeaderProps {
-  spotsRemaining?: number;
-  onZoomIn?: () => void;
-  onZoomOut?: () => void;
-  onReset?: () => void;
-}
+export function Header() {
+  const { data: stats, isError, isLoading } = useStats();
 
-export function GridHeader({
-  spotsRemaining = GRID_SIZE * GRID_SIZE,
-  onZoomIn,
-  onZoomOut,
-  onReset,
-}: GridHeaderProps) {
   const totalSpots = GRID_SIZE * GRID_SIZE;
-  const soldSpots = totalSpots - spotsRemaining;
-  const percentageSold = ((soldSpots / totalSpots) * 100).toFixed(2);
+  const soldPixels = stats?.totalPixelsSold ?? 0;
 
   return (
     <header className="h-14 border-b border-white/5 bg-zinc-950/80 backdrop-blur-md flex items-center justify-between px-4 z-50 fixed top-0 w-full">
       <div className="flex items-center gap-3">
-        <div className="h-8 w-8 bg-gradient-to-br from-purple-600 to-emerald-400 rounded flex items-center justify-center shadow-[0_0_15px_rgba(153,69,255,0.3)]">
+        <div className="h-8 w-8 bg-linear-to-br from-purple-600 to-emerald-400 rounded flex items-center justify-center shadow-[0_0_15px_rgba(153,69,255,0.3)]">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="w-4.5 h-4.5 text-white"
@@ -56,7 +47,13 @@ export function GridHeader({
           </div>
           <div>
             <span className="text-zinc-400">
-              {(totalSpots - spotsRemaining).toLocaleString()}
+              {isLoading ? (
+                <CircleNotchIcon className="inline-block w-3.5 h-3.5 animate-spin" />
+              ) : isError ? (
+                "—"
+              ) : (
+                soldPixels.toLocaleString()
+              )}
             </span>{" "}
             / {totalSpots.toLocaleString()} Pixels
           </div>

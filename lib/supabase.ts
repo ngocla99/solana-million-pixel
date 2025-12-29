@@ -18,18 +18,3 @@ export const supabaseAdmin = createClient(
     },
   }
 );
-
-// Database types
-export interface Spot {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  image_url?: string;
-  link_url?: string;
-  owner_wallet: string;
-  tx_signature?: string;
-  created_at: string;
-  updated_at: string;
-}

@@ -1,6 +1,16 @@
-import type { Spot } from "@/lib/supabase";
-
-export type { Spot };
+export interface Spot {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  image_url?: string;
+  link_url?: string;
+  owner_wallet: string;
+  tx_signature?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 // GET /api/spots
 export type GetSpotsResponse = {
@@ -46,6 +56,14 @@ export type UploadSpotImageInput = {
 export type UploadSpotImageResponse = {
   url: string;
   path: string;
+};
+
+// GET /api/spots/stats
+export type GetStatsResponse = {
+  totalPixelsSold: number;
+  totalSpots: number;
+  uniqueOwners: number;
+  lastUpdated: string | null;
 };
 
 // GET /api/whitelist/check

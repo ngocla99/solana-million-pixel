@@ -8,9 +8,12 @@ import type {
 
 // API Function
 export const checkSpotAvailabilityApi = (
-  input: CheckSpotAvailabilityInput
+  input: CheckSpotAvailabilityInput,
+  signal?: AbortSignal
 ): Promise<CheckSpotAvailabilityResponse> => {
-  return api.post<CheckSpotAvailabilityResponse>("/spots/check", input);
+  return api.post<CheckSpotAvailabilityResponse>("/spots/check", input, {
+    signal,
+  });
 };
 
 // React Mutation Hook
@@ -18,7 +21,8 @@ export const useCheckSpotAvailability = (
   config?: MutationConfig<typeof checkSpotAvailabilityApi>
 ) => {
   return useMutation({
-    mutationFn: checkSpotAvailabilityApi,
+    mutationFn: (input: CheckSpotAvailabilityInput) =>
+      checkSpotAvailabilityApi(input),
     ...config,
   });
 };
