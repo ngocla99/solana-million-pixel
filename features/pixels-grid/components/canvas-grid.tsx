@@ -18,7 +18,7 @@ import {
   renderSoldSpots,
   DEFAULT_COLORS,
   type GridColors,
-} from "./grid-renderer";
+} from "../utils/grid-renderer";
 import { SpotTooltip } from "./spot-tooltip";
 import { useSpots } from "../api/get-spots";
 import {
@@ -46,26 +46,6 @@ interface CanvasGridProps {
     endX: number;
     endY: number;
   }) => void;
-}
-
-// Helper to convert CSS color to hex number
-function cssColorToHex(cssVar: string, fallback: number): number {
-  if (typeof window === "undefined") return fallback;
-
-  // Try to get from computed style of body (which has dark class applied)
-  const style = getComputedStyle(document.body);
-  const color = style.getPropertyValue(cssVar).trim();
-
-  if (!color) return fallback;
-
-  // Parse hex color
-  if (color.startsWith("#")) {
-    const hex = color.slice(1);
-    const parsed = parseInt(hex, 16);
-    if (!isNaN(parsed)) return parsed;
-  }
-
-  return fallback;
 }
 
 // Just use DEFAULT_COLORS directly for reliability

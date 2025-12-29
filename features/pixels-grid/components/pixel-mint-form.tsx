@@ -16,6 +16,8 @@ import {
   setBlockSize,
   type BlockSize,
   useSelection,
+  useIsChecking,
+  useIsAvailable,
 } from "../stores/use-grid-store";
 
 const formSchema = z.object({
@@ -36,6 +38,8 @@ export function PixelMintForm({ onSubmit, isSubmitting }: PixelMintFormProps) {
   const [previewUrl, setPreviewUrl] = useState("");
   const blockSize = useBlockSize();
   const selection = useSelection();
+  const isChecking = useIsChecking();
+  const isAvailable = useIsAvailable();
 
   const x = selection ? Math.min(selection.startX, selection.endX) : 0;
   const y = selection ? Math.min(selection.startY, selection.endY) : 0;
@@ -72,9 +76,23 @@ export function PixelMintForm({ onSubmit, isSubmitting }: PixelMintFormProps) {
           <h2 className="text-sm font-medium text-white tracking-tight">
             Coordinates
           </h2>
-          <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
-            Available
-          </span>
+          {isChecking ? (
+            <span className="text-[10px] text-yellow-400 bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20 flex items-center gap-1">
+              <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Checking...
+            </span>
+          ) : isAvailable ? (
+            <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+              Available
+            </span>
+          ) : selection ? (
+            <span className="text-[10px] text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20">
+              Unavailable
+            </span>
+          ) : null}
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-zinc-900/50 border border-white/10 rounded px-3 py-2 flex flex-col">
@@ -323,7 +341,7 @@ export function PixelMintForm({ onSubmit, isSubmitting }: PixelMintFormProps) {
 
         {/* Submit Button */}
         <button
-          disabled={!selection || isSubmitting}
+          disabled={!selection || !isAvailable || isChecking || isSubmitting}
           type="submit"
           className="w-full group relative overflow-hidden rounded py-2.5 text-sm font-medium text-white transition-all hover:scale-[1.01] disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed mt-6"
         >

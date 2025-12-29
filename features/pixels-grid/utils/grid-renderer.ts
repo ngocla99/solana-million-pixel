@@ -1,12 +1,5 @@
 import { Assets, Container, Graphics, Sprite, Texture } from "pixi.js";
-import {
-  GRID_SIZE,
-  SPOT_SIZE,
-  CHUNK_SIZE,
-  CHUNKS_PER_ROW,
-  type Chunk,
-  getVisibleChunks,
-} from "../utils/grid-utils";
+import { GRID_SIZE, SPOT_SIZE } from "./grid-utils";
 import type { Spot } from "@/lib/supabase";
 
 // Theme-aware colors (these will be passed from React component)
