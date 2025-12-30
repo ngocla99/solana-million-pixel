@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import { PixelMintForm } from "@/features/pixels-grid/components/pixel-mint-form";
 import { LeaderboardSidebar } from "@/features/leaderboard/components/leaderboard-sidebar";
 
+import { MyPixelsSidebar } from "@/features/my-pixels/components/my-pixels-sidebar";
+
 type ActiveTab = "selected" | "my-pixels" | "leaderboard";
 
 const getActiveTab = (pathname: string): ActiveTab => {
@@ -46,20 +48,20 @@ export function Sidebar() {
         ))}
       </div>
 
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-8">
-        {activeTab === "selected" && (
+      {/* Content */}
+      {activeTab === "selected" && (
+        <div className="flex-1 overflow-y-auto p-5 space-y-8">
           <PixelMintForm />
-        )}
+        </div>
+      )}
 
-        {activeTab === "my-pixels" && (
-          <div className="flex flex-col items-center justify-center h-40 text-zinc-600 italic text-xs">
-            Coming soon...
-          </div>
-        )}
+      {activeTab === "my-pixels" && <MyPixelsSidebar />}
 
-        {activeTab === "leaderboard" && <LeaderboardSidebar />}
-      </div>
+      {activeTab === "leaderboard" && (
+        <div className="flex-1 overflow-y-auto p-5">
+          <LeaderboardSidebar />
+        </div>
+      )}
     </aside>
   );
 }

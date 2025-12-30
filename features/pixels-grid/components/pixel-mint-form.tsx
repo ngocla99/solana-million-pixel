@@ -8,7 +8,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
-import { CircleNotchIcon } from "@phosphor-icons/react";
+import { CircleNotchIcon, LinkIcon } from "@phosphor-icons/react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useForm } from "@tanstack/react-form";
 import Image from "next/image";
@@ -34,23 +34,23 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-
 export function PixelMintForm() {
   const [previewUrl, setPreviewUrl] = useState("");
   const blockSize = useBlockSize();
   const selection = useSelection();
   const isChecking = useIsChecking();
   const isAvailable = useIsAvailable();
-  
+
   // Wallet and connection hooks
   const { publicKey } = useWallet();
   const { connection } = useConnection();
-  
+
   // API mutation hooks
   const createSpotMutation = useCreateSpot();
   const uploadImageMutation = useUploadSpotImage();
-  
-  const isSubmitting = createSpotMutation.isPending || uploadImageMutation.isPending;
+
+  const isSubmitting =
+    createSpotMutation.isPending || uploadImageMutation.isPending;
 
   const x = selection ? Math.min(selection.startX, selection.endX) : 0;
   const y = selection ? Math.min(selection.startY, selection.endY) : 0;
@@ -76,24 +76,24 @@ export function PixelMintForm() {
         toast.error("Please connect your wallet first");
         return;
       }
-      
+
       if (!selection) {
         toast.error("Please select a spot first");
         return;
       }
-      
+
       if (!value.image) {
         toast.error("Please upload an image");
         return;
       }
-      
+
       try {
         // Calculate spot dimensions
         const x = Math.min(selection.startX, selection.endX);
         const y = Math.min(selection.startY, selection.endY);
         const spotWidth = Math.abs(selection.endX - selection.startX) + 1;
         const spotHeight = Math.abs(selection.endY - selection.startY) + 1;
-        
+
         // First create the spot
         const spotResult = await createSpotMutation.mutateAsync({
           x,
@@ -103,19 +103,18 @@ export function PixelMintForm() {
           link_url: value.linkUrl,
           owner_wallet: publicKey.toBase58(),
         });
-        
+
         // Then upload the image
         await uploadImageMutation.mutateAsync({
           file: value.image,
           spotId: spotResult.spot.id,
         });
-        
+
         toast.success("Pixel minted successfully!");
-        
+
         // Reset form
         setPreviewUrl("");
         form.reset();
-        
       } catch (error) {
         console.error("Minting failed:", error);
         toast.error("Failed to mint pixel. Please try again.");
@@ -320,20 +319,7 @@ export function PixelMintForm() {
                     </FieldLabel>
                     <div className="relative group focus-within:ring-1 focus-within:ring-purple-500 rounded transition-all">
                       <div className="absolute left-3 top-2.5 text-zinc-600">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                        </svg>
+                        <LinkIcon className="size-4" />
                       </div>
                       <input
                         id={field.name}
