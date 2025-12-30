@@ -5,6 +5,7 @@ export interface Spot {
   width: number;
   height: number;
   image_url?: string;
+  color_hex?: string;
   link_url?: string;
   owner_wallet: string;
   tx_signature?: string;
@@ -24,6 +25,7 @@ export type CreateSpotInput = {
   width: number;
   height: number;
   image_url?: string;
+  color_hex?: string;
   link_url?: string;
   owner_wallet: string;
   tx_signature?: string;

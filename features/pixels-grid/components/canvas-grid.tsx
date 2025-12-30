@@ -24,6 +24,7 @@ import { useSpots } from "../api/get-spots";
 import {
   setSelection as setStoreSelection,
   useBlockSize,
+  usePreviewColor,
   type BlockSize,
 } from "../stores/use-grid-store";
 
@@ -67,6 +68,9 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
   // Get block size from Zustand store
   const blockSize = useBlockSize();
   const blockSizeNum = getBlockSizeNumber(blockSize);
+
+  // Get preview color from Zustand store
+  const previewColor = usePreviewColor();
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [hoveredSpot, setHoveredSpot] = useState<{
@@ -341,7 +345,8 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
           newSelection.endX,
           newSelection.endY,
           true,
-          colorsRef.current
+          colorsRef.current,
+          previewColor
         );
       }
     };
@@ -395,7 +400,8 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
           newSelection.endX,
           newSelection.endY,
           true,
-          colorsRef.current
+          colorsRef.current,
+          previewColor
         );
       }
     };
@@ -439,7 +445,24 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
     selection,
     onSelectionComplete,
     blockSizeNum,
+    previewColor,
   ]);
+
+  // Update selection overlay when preview color changes
+  useEffect(() => {
+    if (!isInitialized || !selectionOverlayRef.current || !selection) return;
+
+    updateSelectionOverlay(
+      selectionOverlayRef.current,
+      selection.startX,
+      selection.startY,
+      selection.endX,
+      selection.endY,
+      true,
+      colorsRef.current,
+      previewColor
+    );
+  }, [previewColor, isInitialized, selection]);
 
   // Clear selection handler
   const clearSelection = useCallback(() => {
@@ -453,7 +476,8 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
       0,
       0,
       false,
-      colorsRef.current
+      colorsRef.current,
+      null
     );
   }, []);
 
