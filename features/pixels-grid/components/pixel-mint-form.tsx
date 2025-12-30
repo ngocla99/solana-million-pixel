@@ -8,34 +8,33 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
-import { CircleNotchIcon, LinkIcon } from "@phosphor-icons/react";
+import {
+  CircleNotchIcon,
+  LinkIcon,
+  ImageIcon,
+  PaletteIcon,
+} from "@phosphor-icons/react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useForm } from "@tanstack/react-form";
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 import { useCreateSpot } from "../api/create-spot";
 import { useUploadSpotImage } from "../api/upload-spot-image";
 import {
   setBlockSize,
+  setPreviewColor,
   useBlockSize,
   useIsAvailable,
   useIsChecking,
   useSelection,
 } from "../stores/use-grid-store";
 
-const formSchema = z.object({
-  image: z
-    .instanceof(File, { message: "Please upload an image" })
-    .refine((file) => file.size > 0, "Please upload an image"),
-  linkUrl: z.string().url("Please enter a valid URL"),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+type PixelMode = "image" | "color";
 
 export function PixelMintForm() {
   const [previewUrl, setPreviewUrl] = useState("");
+  const [pixelMode, setPixelMode] = useState<PixelMode>("image");
   const blockSize = useBlockSize();
   const selection = useSelection();
   const isChecking = useIsChecking();
@@ -66,10 +65,8 @@ export function PixelMintForm() {
   const form = useForm({
     defaultValues: {
       image: null as File | null,
+      colorHex: "",
       linkUrl: "",
-    },
-    validators: {
-      onChange: formSchema,
     },
     onSubmit: async ({ value }) => {
       if (!publicKey) {
@@ -82,8 +79,14 @@ export function PixelMintForm() {
         return;
       }
 
-      if (!value.image) {
+      // Validate based on mode
+      if (pixelMode === "image" && !value.image) {
         toast.error("Please upload an image");
+        return;
+      }
+
+      if (pixelMode === "color" && !value.colorHex) {
+        toast.error("Please select a color");
         return;
       }
 
@@ -94,23 +97,38 @@ export function PixelMintForm() {
         const spotWidth = Math.abs(selection.endX - selection.startX) + 1;
         const spotHeight = Math.abs(selection.endY - selection.startY) + 1;
 
-        // First create the spot
-        const spotResult = await createSpotMutation.mutateAsync({
-          x,
-          y,
-          width: spotWidth,
-          height: spotHeight,
-          link_url: value.linkUrl,
-          owner_wallet: publicKey.toBase58(),
-        });
+        if (pixelMode === "color") {
+          // Create spot with color only (no image upload needed)
+          await createSpotMutation.mutateAsync({
+            x,
+            y,
+            width: spotWidth,
+            height: spotHeight,
+            color_hex: value.colorHex,
+            link_url: value.linkUrl,
+            owner_wallet: publicKey.toBase58(),
+          });
 
-        // Then upload the image
-        await uploadImageMutation.mutateAsync({
-          file: value.image,
-          spotId: spotResult.spot.id,
-        });
+          toast.success("Pixel minted successfully!");
+        } else {
+          // Image mode: create spot then upload image
+          const spotResult = await createSpotMutation.mutateAsync({
+            x,
+            y,
+            width: spotWidth,
+            height: spotHeight,
+            link_url: value.linkUrl,
+            owner_wallet: publicKey.toBase58(),
+          });
 
-        toast.success("Pixel minted successfully!");
+          // Upload the image
+          await uploadImageMutation.mutateAsync({
+            file: value.image!,
+            spotId: spotResult.spot.id,
+          });
+
+          toast.success("Pixel minted successfully!");
+        }
 
         // Reset form
         setPreviewUrl("");
@@ -204,111 +222,261 @@ export function PixelMintForm() {
               </div>
             </Field>
 
-            {/* Image Upload */}
-            <form.Field name="image">
-              {(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched && !field.state.meta.isValid;
-                return (
-                  <Field data-invalid={isInvalid}>
-                    <FieldLabel className="text-zinc-400">
-                      Upload Image
-                    </FieldLabel>
-                    <div className="relative w-full">
-                      <label className="flex flex-col items-center justify-center w-full h-24 border border-dashed border-white/10 rounded cursor-pointer bg-zinc-900/30 hover:bg-zinc-900/80 hover:border-purple-500/50 transition-all group overflow-hidden">
-                        {previewUrl ? (
-                          <Image
-                            src={previewUrl}
-                            alt="Preview"
-                            width={200}
-                            height={200}
-                            className="w-full h-full object-cover"
+            {/* Pixel Mode Toggle (Image vs Color) */}
+            <Field>
+              <FieldLabel className="text-zinc-400">Pixel Type</FieldLabel>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPixelMode("image");
+                    form.setFieldValue("colorHex", "");
+                    setPreviewColor(null);
+                  }}
+                  className={cn(
+                    "flex-1 py-2 text-xs rounded transition-colors border flex items-center justify-center gap-2",
+                    pixelMode === "image"
+                      ? "border-purple-500/50 bg-purple-500/10 text-white"
+                      : "border-white/10 bg-zinc-900 text-zinc-400 hover:border-white/20"
+                  )}
+                >
+                  <ImageIcon className="size-4" />
+                  Image
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPixelMode("color");
+                    form.setFieldValue("image", null);
+                    setPreviewUrl("");
+                  }}
+                  className={cn(
+                    "flex-1 py-2 text-xs rounded transition-colors border flex items-center justify-center gap-2",
+                    pixelMode === "color"
+                      ? "border-purple-500/50 bg-purple-500/10 text-white"
+                      : "border-white/10 bg-zinc-900 text-zinc-400 hover:border-white/20"
+                  )}
+                >
+                  <PaletteIcon className="size-4" />
+                  Color
+                </button>
+              </div>
+            </Field>
+
+            {/* Conditional: Image Upload or Color Picker */}
+            {pixelMode === "image" ? (
+              /* Image Upload */
+              <form.Field
+                name="image"
+                validators={{
+                  onChange: ({ value }) => {
+                    if (pixelMode === "image" && (!value || value.size === 0)) {
+                      return { message: "Please upload an image" };
+                    }
+                    return undefined;
+                  },
+                }}
+              >
+                {(field) => {
+                  const isInvalid =
+                    field.state.meta.isTouched && !field.state.meta.isValid;
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel className="text-zinc-400">
+                        Upload Image
+                      </FieldLabel>
+                      <div className="relative w-full">
+                        <label className="flex flex-col items-center justify-center w-full h-24 border border-dashed border-white/10 rounded cursor-pointer bg-zinc-900/30 hover:bg-zinc-900/80 hover:border-purple-500/50 transition-all group overflow-hidden">
+                          {previewUrl ? (
+                            <Image
+                              src={previewUrl}
+                              alt="Preview"
+                              width={200}
+                              height={200}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center justify-center pt-3 pb-4">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                aria-hidden="true"
+                                role="img"
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                className="mb-2 text-zinc-500 group-hover:text-purple-400 transition-colors"
+                              >
+                                <g
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="1.5"
+                                >
+                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                  <polyline points="17 8 12 3 7 8"></polyline>
+                                  <line x1="12" x2="12" y1="3" y2="15"></line>
+                                </g>
+                              </svg>
+                              <p className="text-[10px] text-zinc-500 group-hover:text-zinc-400 text-center leading-tight">
+                                <span className="font-medium text-zinc-300 group-hover:text-purple-200">
+                                  Click to upload
+                                </span>
+                                <br />
+                                or drag & drop
+                              </p>
+                            </div>
+                          )}
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/png, image/jpeg, image/gif"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                field.handleChange(file);
+                                const url = URL.createObjectURL(file);
+                                setPreviewUrl(url);
+                              }
+                            }}
                           />
-                        ) : (
-                          <div className="flex flex-col items-center justify-center pt-3 pb-4">
+                        </label>
+                        {previewUrl && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              field.handleChange(null);
+                              setPreviewUrl("");
+                            }}
+                            className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors"
+                          >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
-                              aria-hidden="true"
-                              role="img"
-                              width="18"
-                              height="18"
+                              width="12"
+                              height="12"
                               viewBox="0 0 24 24"
-                              className="mb-2 text-zinc-500 group-hover:text-purple-400 transition-colors"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
                             >
-                              <g
-                                fill="none"
-                                stroke="currentColor"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="1.5"
-                              >
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="17 8 12 3 7 8"></polyline>
-                                <line x1="12" x2="12" y1="3" y2="15"></line>
-                              </g>
+                              <path d="M18 6 6 18" />
+                              <path d="m6 6 12 12" />
                             </svg>
-                            <p className="text-[10px] text-zinc-500 group-hover:text-zinc-400 text-center leading-tight">
-                              <span className="font-medium text-zinc-300 group-hover:text-purple-200">
-                                Click to upload
-                              </span>
-                              <br />
-                              or drag & drop
-                            </p>
-                          </div>
+                          </button>
                         )}
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept="image/png, image/jpeg, image/gif"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              field.handleChange(file);
-                              const url = URL.createObjectURL(file);
-                              setPreviewUrl(url);
-                            }
-                          }}
-                        />
-                      </label>
-                      {previewUrl && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            field.handleChange(null);
-                            setPreviewUrl("");
-                          }}
-                          className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M18 6 6 18" />
-                            <path d="m6 6 12 12" />
-                          </svg>
-                        </button>
+                      </div>
+                      <FieldDescription>
+                        Supports PNG, JPG, GIF (Max 2MB)
+                      </FieldDescription>
+                      {isInvalid && (
+                        <FieldError errors={field.state.meta.errors} />
                       )}
-                    </div>
-                    <FieldDescription>
-                      Supports PNG, JPG, GIF (Max 2MB)
-                    </FieldDescription>
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
-                  </Field>
-                );
-              }}
-            </form.Field>
+                    </Field>
+                  );
+                }}
+              </form.Field>
+            ) : (
+              /* Color Picker */
+              <form.Field
+                name="colorHex"
+                validators={{
+                  onChange: ({ value }) => {
+                    if (pixelMode === "color") {
+                      if (!value) {
+                        return { message: "Please select a color" };
+                      }
+                      if (!/^#[0-9A-Fa-f]{6}$/.test(value)) {
+                        return {
+                          message:
+                            "Please enter a valid hex color (e.g., #FF5733)",
+                        };
+                      }
+                    }
+                    return undefined;
+                  },
+                }}
+              >
+                {(field) => {
+                  const isInvalid =
+                    field.state.meta.isTouched && !field.state.meta.isValid;
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel className="text-zinc-400">
+                        Choose Color
+                      </FieldLabel>
+
+                      {/* Custom Color Input */}
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1 group focus-within:ring-1 focus-within:ring-purple-500 rounded transition-all">
+                          <input
+                            type="text"
+                            value={field.state.value}
+                            onChange={(e) => {
+                              let value = e.target.value;
+                              // Auto-add # if not present
+                              if (value && !value.startsWith("#")) {
+                                value = "#" + value;
+                              }
+                              const upperValue = value.toUpperCase();
+                              field.handleChange(upperValue);
+                              // Update canvas preview if valid hex
+                              if (/^#[0-9A-F]{6}$/.test(upperValue)) {
+                                setPreviewColor(upperValue);
+                              }
+                            }}
+                            onBlur={field.handleBlur}
+                            placeholder="#FF5733"
+                            maxLength={7}
+                            className="w-full bg-zinc-900 border border-white/10 rounded py-2 px-3 text-xs text-white placeholder-zinc-700 focus:outline-none font-mono uppercase"
+                          />
+                        </div>
+                        {/* Native color picker */}
+                        <input
+                          type="color"
+                          value={field.state.value || "#9945FF"}
+                          onChange={(e) => {
+                            const color = e.target.value.toUpperCase();
+                            field.handleChange(color);
+                            setPreviewColor(color);
+                          }}
+                          className="w-10 h-10 rounded border border-white/20 cursor-pointer bg-transparent"
+                          title="Pick custom color"
+                        />
+                      </div>
+                      <FieldDescription>
+                        Select from palette or enter custom hex code
+                      </FieldDescription>
+                      {isInvalid && (
+                        <FieldError errors={field.state.meta.errors} />
+                      )}
+                    </Field>
+                  );
+                }}
+              </form.Field>
+            )}
 
             {/* Redirect Link */}
-            <form.Field name="linkUrl">
+            <form.Field
+              name="linkUrl"
+              validators={{
+                onChange: ({ value }) => {
+                  if (!value) {
+                    return { message: "Please enter a redirect link" };
+                  }
+                  // Simple URL validation
+                  try {
+                    new URL(
+                      value.startsWith("http") ? value : `https://${value}`
+                    );
+                  } catch {
+                    return { message: "Please enter a valid URL" };
+                  }
+                  return undefined;
+                },
+              }}
+            >
               {(field) => {
                 const isInvalid =
                   field.state.meta.isTouched && !field.state.meta.isValid;
