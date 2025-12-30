@@ -88,6 +88,7 @@ Uses `@t3-oss/env-nextjs` with Zod validation. Config at [config/env.ts](config/
 - Reusable primitives in `components/ui/` (Base UI + shadcn pattern)
 - Feature components live within their feature folder
 - Forms use **@tanstack/react-form** with Zod validation
+- **Icons**: Use `@phosphor-icons/react` with the `Icon` suffix (e.g., `TrophyIcon`, `UserIcon`). Do not use `lucide-react`.
 
 ## Key Files
 

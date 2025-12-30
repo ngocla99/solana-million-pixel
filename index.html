@@ -1,461 +1,413 @@
-<html lang="en" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Solana Pixel Grid</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap"
-      rel="stylesheet"
-    />
-    <script>
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ["Inter", "sans-serif"],
-              mono: ["JetBrains Mono", "monospace"],
-            },
-            colors: {
-              solana: {
-                purple: "#9945FF",
-                green: "#14F195",
-                dark: "#000000",
-                surface: "#09090b",
-              },
-            },
-            backgroundImage: {
-              "grid-pattern":
-                "linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)",
-            },
-          },
-        },
-      };
-    </script>
-    <style>
-      /* Custom Scrollbar */
-      ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #09090b;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #27272a;
-        border-radius: 3px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #3f3f46;
-      }
-      /* Grid Canvas Simulation */
-      .pixel-canvas {
-        background-size: 20px 20px;
-        /* Simulates the 1000x1000 grid lines without DOM overhead */
-        width: 20000px;
-        height: 20000px;
-        position: relative;
-      }
-      /* Scanline / CRT effect subtle overlay */
-      .scanlines {
-        background: linear-gradient(
-          to bottom,
-          rgba(255, 255, 255, 0),
-          rgba(255, 255, 255, 0) 50%,
-          rgba(0, 0, 0, 0.1) 50%,
-          rgba(0, 0, 0, 0.1)
-        );
-        background-size: 100% 4px;
-      }
-      /* Custom Range Slider */
-      input[type="range"] {
-        -webkit-appearance: none;
-        background: transparent;
-      }
-      input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        height: 16px;
-        width: 16px;
-        border-radius: 50%;
-        background: #fff;
-        margin-top: -6px;
-        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-      }
-      input[type="range"]::-webkit-slider-runnable-track {
-        width: 100%;
-        height: 4px;
-        background: #27272a;
-        border-radius: 2px;
-      }
-    </style>
-  </head>
-  <body
-    class="bg-zinc-950 text-zinc-300 font-sans antialiased overflow-hidden selection:bg-purple-500/30 selection:text-purple-200"
-  >
+<html lang="en" class="dark"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solana Pixel Grid - Leaderboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+darkMode: 'class',
+theme: {
+extend: {
+fontFamily: {
+sans: ['Inter', 'sans-serif'],
+mono: ['JetBrains Mono', 'monospace'],
+},
+colors: {
+solana: {
+purple: '#9945FF',
+green: '#14F195',
+dark: '#000000',
+surface: '#09090b',
+}
+},
+backgroundImage: {
+'grid-pattern': "linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)",
+}
+}
+}
+}
+</script>
+<style>
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+width: 6px;
+height: 6px;
+}
+::-webkit-scrollbar-track {
+background: #09090b;
+}
+::-webkit-scrollbar-thumb {
+background: #27272a;
+border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+background: #3f3f46;
+}
+</style></head>
+<body class="bg-zinc-950 text-zinc-300 font-sans antialiased overflow-hidden selection:bg-purple-500/30 selection:text-purple-200">
+
     <!-- App Layout -->
     <div class="flex flex-col h-screen w-full relative">
-      <!-- Navigation -->
-      <header
-        class="h-14 border-b border-white/5 bg-zinc-950/80 backdrop-blur-md flex items-center justify-between px-4 z-50 absolute top-0 w-full"
-      >
-        <div class="flex items-center gap-3">
-          <div
-            class="h-8 w-8 bg-gradient-to-br from-purple-600 to-emerald-400 rounded flex items-center justify-center shadow-[0_0_15px_rgba(153,69,255,0.3)]"
-          >
-            <span
-              class="iconify text-white"
-              data-icon="lucide:grid-3x3"
-              data-width="18"
-              data-stroke-width="1.5"
-            ></span>
-          </div>
-          <h1 class="font-semibold tracking-tighter text-white text-base">
-            SOLGRID
-          </h1>
-          <span
-            class="hidden sm:inline-block px-2 py-0.5 rounded-full bg-zinc-900 border border-white/10 text-[10px] uppercase tracking-wide text-zinc-500"
-            >Beta</span
-          >
-        </div>
 
-        <div class="flex items-center gap-4">
-          <div
-            class="hidden md:flex items-center gap-6 text-xs font-medium text-zinc-500"
-          >
-            <div class="flex items-center gap-2">
-              <span
-                class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"
-              ></span>
-              <span class="text-zinc-400">Live</span>
-            </div>
-            <div>
-              <span class="text-zinc-400">42,893</span> / 1,000,000 Pixels
-            </div>
-            <div>Floor: <span class="text-zinc-400">0.05 SOL</span></div>
-          </div>
-
-          <button
-            class="group flex items-center gap-2 bg-white text-black hover:bg-zinc-200 px-3 py-1.5 rounded text-xs font-medium transition-all shadow-[0_0_10px_rgba(255,255,255,0.1)]"
-          >
-            <span
-              class="iconify"
-              data-icon="lucide:wallet"
-              data-width="14"
-              data-stroke-width="1.5"
-            ></span>
-            <span>Connect Wallet</span>
-          </button>
-        </div>
-      </header>
-
-      <!-- Main Workspace -->
-      <main class="flex-1 flex overflow-hidden pt-14 relative">
-        <!-- Left: Infinite Canvas (Simulated) -->
-        <div
-          class="flex-1 bg-zinc-950 relative overflow-auto cursor-crosshair group"
-        >
-          <!-- The "Infinite" Grid Layer -->
-          <div
-            class="pixel-canvas bg-grid-pattern transform origin-top-left transition-transform duration-75"
-            style="transform: scale(1)"
-          >
-            <!-- Simulating some occupied pixels/blocks -->
-            <!-- Center Cluster -->
-            <div
-              class="absolute top-[400px] left-[400px] w-[100px] h-[100px] bg-gradient-to-br from-purple-600 to-indigo-600 border border-white/20 shadow-lg flex items-center justify-center hover:scale-[1.02] transition-transform z-10"
-            >
-              <span
-                class="iconify text-white/50"
-                data-icon="lucide:gem"
-                data-width="32"
-                data-stroke-width="1.5"
-              ></span>
-            </div>
-
-            <!-- Scattered Pixels -->
-            <div
-              class="absolute top-[320px] left-[420px] w-[20px] h-[20px] bg-emerald-500/80 border border-white/10 hover:bg-emerald-400 cursor-pointer"
-            ></div>
-            <div
-              class="absolute top-[320px] left-[440px] w-[20px] h-[20px] bg-emerald-500/80 border border-white/10 hover:bg-emerald-400 cursor-pointer"
-            ></div>
-            <div
-              class="absolute top-[340px] left-[420px] w-[20px] h-[20px] bg-emerald-500/80 border border-white/10 hover:bg-emerald-400 cursor-pointer"
-            ></div>
-
-            <!-- An Image Block -->
-            <div
-              class="absolute top-[520px] left-[600px] w-[60px] h-[60px] bg-zinc-800 border border-white/10 overflow-hidden group/pixel"
-            >
-              <img
-                src="https://images.unsplash.com/photo-1620325867502-221cfb5faa5f?q=80&amp;w=200&amp;auto=format&amp;fit=crop"
-                class="w-full h-full object-cover opacity-60 group-hover/pixel:opacity-100 transition-opacity"
-                alt="NFT"
-              />
-            </div>
-
-            <!-- Selection Indicator (Simulated active state) -->
-            <div
-              class="absolute top-[480px] left-[340px] w-[20px] h-[20px] bg-white/10 ring-1 ring-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.5)] animate-pulse z-20"
-            ></div>
-
-            <!-- Tooltip for selection -->
-            <div
-              class="absolute top-[450px] left-[330px] bg-zinc-900 border border-white/10 px-2 py-1 rounded text-[10px] text-zinc-400 whitespace-nowrap shadow-xl z-30"
-            >
-              x: 340, y: 480
-            </div>
-          </div>
-
-          <!-- Overlay Controls (Zoom/Map) -->
-          <div
-            class="absolute bottom-6 left-6 flex flex-col gap-4 pointer-events-none"
-          >
-            <div
-              class="bg-zinc-900/90 backdrop-blur border border-white/10 p-1 rounded-lg pointer-events-auto flex flex-col gap-1 shadow-2xl"
-            >
-              <button
-                class="p-2 hover:bg-white/5 rounded text-zinc-400 hover:text-white transition-colors"
-              >
-                <span
-                  class="iconify"
-                  data-icon="lucide:plus"
-                  data-width="16"
-                  data-stroke-width="1.5"
-                ></span>
-              </button>
-              <button
-                class="p-2 hover:bg-white/5 rounded text-zinc-400 hover:text-white transition-colors"
-              >
-                <span
-                  class="iconify"
-                  data-icon="lucide:minus"
-                  data-width="16"
-                  data-stroke-width="1.5"
-                ></span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right: Interaction Sidebar -->
-        <aside
-          class="w-80 bg-zinc-950 border-l border-white/5 flex flex-col z-20 shadow-2xl"
-        >
-          <!-- Tabs -->
-          <div class="flex border-b border-white/5">
-            <button
-              class="flex-1 py-3 text-xs font-medium text-white border-b border-purple-500 bg-white/5"
-            >
-              Selected
-            </button>
-            <button
-              class="flex-1 py-3 text-xs font-medium text-zinc-500 hover:text-zinc-300 hover:bg-white/5 transition-colors"
-            >
-              My Pixels
-            </button>
-            <button
-              class="flex-1 py-3 text-xs font-medium text-zinc-500 hover:text-zinc-300 hover:bg-white/5 transition-colors"
-            >
-              Leaderboard
-            </button>
-          </div>
-
-          <!-- Scrollable Content -->
-          <div class="flex-1 overflow-y-auto p-5 space-y-8">
-            <!-- Coordinates Section -->
-            <div class="space-y-3">
-              <div class="flex items-center justify-between">
-                <h2 class="text-sm font-medium text-white tracking-tight">
-                  Coordinates
-                </h2>
-                <span
-                  class="text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20"
-                  >Available</span
-                >
-              </div>
-              <div class="grid grid-cols-2 gap-3">
-                <div
-                  class="bg-zinc-900/50 border border-white/10 rounded px-3 py-2 flex flex-col"
-                >
-                  <label class="text-[10px] text-zinc-500 uppercase font-mono"
-                    >X-Axis</label
-                  >
-                  <span class="font-mono text-sm text-white">340</span>
+        <!-- Navigation -->
+        <header class="h-14 border-b border-white/5 bg-zinc-950/80 backdrop-blur-md flex items-center justify-between px-4 z-50 absolute top-0 w-full">
+            <div class="flex items-center gap-3">
+                <div class="h-8 w-8 bg-gradient-to-br from-purple-600 to-emerald-400 rounded flex items-center justify-center shadow-[0_0_15px_rgba(153,69,255,0.3)]">
+                    <span class="iconify text-white" data-icon="lucide:grid-3x3" data-width="18" data-stroke-width="1.5"></span>
                 </div>
-                <div
-                  class="bg-zinc-900/50 border border-white/10 rounded px-3 py-2 flex flex-col"
-                >
-                  <label class="text-[10px] text-zinc-500 uppercase font-mono"
-                    >Y-Axis</label
-                  >
-                  <span class="font-mono text-sm text-white">480</span>
-                </div>
-              </div>
+                <h1 class="font-semibold tracking-tighter text-white text-base">SOLGRID</h1>
+                <span class="hidden sm:inline-block px-2 py-0.5 rounded-full bg-zinc-900 border border-white/10 text-[10px] uppercase tracking-wide text-zinc-500">Beta</span>
             </div>
 
-            <!-- Configuration -->
-            <div class="space-y-4">
-              <h2 class="text-sm font-medium text-white tracking-tight">
-                Pixel Data
-              </h2>
+            <div class="flex items-center gap-4">
+                <div class="hidden md:flex items-center gap-6 text-xs font-medium text-zinc-500">
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-zinc-400">Live</span>
+                    </div>
+                    <div>
+                        <span class="text-zinc-400">42,893</span> / 1,000,000 Pixels
+                    </div>
+                    <div>
+                        Vol: <span class="text-zinc-400">1,240 SOL</span>
+                    </div>
+                </div>
 
-              <!-- Block Size Selector -->
-              <div class="space-y-2">
-                <div class="flex justify-between text-xs text-zinc-400">
-                  <span>Block Size</span>
-                  <span class="text-white">1x1</span>
+                <div class="flex items-center gap-2">
+                    <div class="h-8 w-8 rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-600 border border-white/10 flex items-center justify-center">
+                        <span class="text-[10px] font-mono text-white">8x</span>
+                    </div>
+                    <span class="hidden sm:block text-xs font-mono text-zinc-400">8x...92a</span>
                 </div>
-                <div class="flex gap-2">
-                  <button
-                    class="flex-1 py-1.5 text-xs border border-purple-500/50 bg-purple-500/10 text-white rounded transition-colors"
-                  >
-                    1x1
-                  </button>
-                  <button
-                    class="flex-1 py-1.5 text-xs border border-white/10 bg-zinc-900 text-zinc-400 hover:border-white/20 rounded transition-colors"
-                  >
-                    2x2
-                  </button>
-                  <button
-                    class="flex-1 py-1.5 text-xs border border-white/10 bg-zinc-900 text-zinc-400 hover:border-white/20 rounded transition-colors"
-                  >
-                    5x5
-                  </button>
-                </div>
-              </div>
+            </div>
+        </header>
 
-              <!-- Image Upload -->
-              <div class="space-y-2">
-                <label class="text-xs text-zinc-400">Image URL</label>
-                <div
-                  class="relative group focus-within:ring-1 focus-within:ring-purple-500 rounded transition-all"
-                >
-                  <div class="absolute left-3 top-2.5 text-zinc-600">
-                    <span
-                      class="iconify"
-                      data-icon="lucide:image"
-                      data-width="14"
-                      data-stroke-width="1.5"
-                    ></span>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="https://..."
-                    class="w-full bg-zinc-900 border border-white/10 rounded py-2 pl-9 pr-3 text-xs text-white placeholder-zinc-700 focus:outline-none transition-colors"
-                  />
-                </div>
-                <div class="text-[10px] text-zinc-600">
-                  Supports PNG, JPG, GIF (Max 2MB)
-                </div>
-              </div>
+        <!-- Main Workspace -->
+        <main class="flex-1 flex overflow-hidden pt-14 relative">
+            
+            <!-- Left: Leaderboard Content -->
+            <div class="flex-1 bg-zinc-950 relative overflow-y-auto">
+                <div class="max-w-5xl mx-auto p-8 space-y-8">
+                    
+                    <!-- Header Section -->
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h2 class="text-xl font-medium text-white tracking-tight flex items-center gap-2">
+                                <span class="iconify text-purple-400" data-icon="lucide:trophy" data-width="20"></span>
+                                Global Leaderboard
+                            </h2>
+                            <p class="text-sm text-zinc-500 mt-1">Top contributors shaping the digital canvas.</p>
+                        </div>
+                        
+                        <div class="flex items-center bg-zinc-900 border border-white/5 rounded p-1">
+                            <button class="px-3 py-1 text-xs font-medium text-white bg-white/10 rounded shadow-sm">24h</button>
+                            <button class="px-3 py-1 text-xs font-medium text-zinc-500 hover:text-zinc-300 transition-colors">7d</button>
+                            <button class="px-3 py-1 text-xs font-medium text-zinc-500 hover:text-zinc-300 transition-colors">All Time</button>
+                        </div>
+                    </div>
 
-              <!-- Redirect Link -->
-              <div class="space-y-2">
-                <label class="text-xs text-zinc-400">Redirect Link</label>
-                <div
-                  class="relative group focus-within:ring-1 focus-within:ring-purple-500 rounded transition-all"
-                >
-                  <div class="absolute left-3 top-2.5 text-zinc-600">
-                    <span
-                      class="iconify"
-                      data-icon="lucide:link"
-                      data-width="14"
-                      data-stroke-width="1.5"
-                    ></span>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="your-project.com"
-                    class="w-full bg-zinc-900 border border-white/10 rounded py-2 pl-9 pr-3 text-xs text-white placeholder-zinc-700 focus:outline-none transition-colors"
-                  />
+                    <!-- Top 3 Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- #2 Silver -->
+                        <div class="relative group bg-zinc-900/40 border border-white/5 hover:border-white/10 rounded-xl p-5 flex flex-col items-center gap-3 transition-all hover:-translate-y-1">
+                            <div class="absolute top-3 left-3 text-xs font-mono text-zinc-500">#2</div>
+                            <div class="h-16 w-16 rounded-full p-[2px] bg-gradient-to-b from-slate-300 to-slate-600">
+                                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&amp;w=200&amp;auto=format&amp;fit=crop" class="w-full h-full rounded-full object-cover border-2 border-zinc-950" alt="User">
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm font-medium text-white">Aliceverse</div>
+                                <div class="text-xs font-mono text-zinc-500 mt-0.5">@alice_sol</div>
+                            </div>
+                            <div class="w-full h-px bg-white/5"></div>
+                            <div class="flex justify-between w-full text-xs">
+                                <span class="text-zinc-500">Pixels</span>
+                                <span class="text-white font-mono">1,204</span>
+                            </div>
+                            <div class="flex justify-between w-full text-xs">
+                                <span class="text-zinc-500">Volume</span>
+                                <span class="text-white font-mono">42.5 SOL</span>
+                            </div>
+                        </div>
+
+                        <!-- #1 Gold -->
+                        <div class="relative group bg-gradient-to-b from-yellow-500/10 to-transparent border border-yellow-500/20 rounded-xl p-5 flex flex-col items-center gap-3 shadow-[0_0_30px_rgba(234,179,8,0.1)] scale-105 z-10">
+                            <div class="absolute -top-3">
+                                <span class="iconify text-yellow-400 drop-shadow-lg" data-icon="lucide:crown" data-width="24"></span>
+                            </div>
+                            <div class="h-20 w-20 rounded-full p-[2px] bg-gradient-to-b from-yellow-300 to-yellow-600 shadow-lg">
+                                <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&amp;w=200&amp;auto=format&amp;fit=crop" class="w-full h-full rounded-full object-cover border-4 border-zinc-950" alt="User">
+                            </div>
+                            <div class="text-center">
+                                <div class="text-base font-semibold text-white">CryptoKing</div>
+                                <div class="text-xs font-mono text-yellow-500/80 mt-0.5">@king_dev</div>
+                            </div>
+                            <div class="w-full h-px bg-yellow-500/20"></div>
+                            <div class="flex justify-between w-full text-sm">
+                                <span class="text-zinc-400">Pixels</span>
+                                <span class="text-white font-mono">3,492</span>
+                            </div>
+                            <div class="flex justify-between w-full text-sm">
+                                <span class="text-zinc-400">Volume</span>
+                                <span class="text-white font-mono">158.2 SOL</span>
+                            </div>
+                        </div>
+
+                        <!-- #3 Bronze -->
+                        <div class="relative group bg-zinc-900/40 border border-white/5 hover:border-white/10 rounded-xl p-5 flex flex-col items-center gap-3 transition-all hover:-translate-y-1">
+                            <div class="absolute top-3 left-3 text-xs font-mono text-zinc-500">#3</div>
+                            <div class="h-16 w-16 rounded-full p-[2px] bg-gradient-to-b from-orange-300 to-orange-700">
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&amp;w=200&amp;auto=format&amp;fit=crop" class="w-full h-full rounded-full object-cover border-2 border-zinc-950" alt="User">
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm font-medium text-white">PixelPirate</div>
+                                <div class="text-xs font-mono text-zinc-500 mt-0.5">7x...99b</div>
+                            </div>
+                            <div class="w-full h-px bg-white/5"></div>
+                            <div class="flex justify-between w-full text-xs">
+                                <span class="text-zinc-500">Pixels</span>
+                                <span class="text-white font-mono">982</span>
+                            </div>
+                            <div class="flex justify-between w-full text-xs">
+                                <span class="text-zinc-500">Volume</span>
+                                <span class="text-white font-mono">28.1 SOL</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ranking Table -->
+                    <div class="rounded-xl border border-white/5 bg-zinc-900/30 overflow-hidden">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-white/5 text-[10px] uppercase tracking-wider text-zinc-500">
+                                    <th class="px-6 py-4 font-medium w-16 text-center">Rank</th>
+                                    <th class="px-6 py-4 font-medium">User</th>
+                                    <th class="px-6 py-4 font-medium text-right">Pixels</th>
+                                    <th class="px-6 py-4 font-medium text-right">Area Covered</th>
+                                    <th class="px-6 py-4 font-medium text-right">Total Volume</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5 text-xs">
+                                <!-- Row 4 -->
+                                <tr class="group hover:bg-white/5 transition-colors">
+                                    <td class="px-6 py-4 text-center font-mono text-zinc-500">4</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="h-8 w-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-medium">D</div>
+                                            <div>
+                                                <div class="text-white font-medium">DAO_Treasury</div>
+                                                <div class="text-[10px] text-zinc-500">dao.sol</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-right font-mono text-zinc-300">850</td>
+                                    <td class="px-6 py-4 text-right font-mono text-zinc-500">0.85%</td>
+                                    <td class="px-6 py-4 text-right font-mono text-white">21.4 SOL</td>
+                                </tr>
+                                <!-- Row 5 -->
+                                <tr class="group hover:bg-white/5 transition-colors">
+                                    <td class="px-6 py-4 text-center font-mono text-zinc-500">5</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="h-8 w-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 font-medium">M</div>
+                                            <div>
+                                                <div class="text-white font-medium">MoonBois</div>
+                                                <div class="text-[10px] text-zinc-500">3x...88c</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-right font-mono text-zinc-300">620</td>
+                                    <td class="px-6 py-4 text-right font-mono text-zinc-500">0.62%</td>
+                                    <td class="px-6 py-4 text-right font-mono text-white">18.2 SOL</td>
+                                </tr>
+                                <!-- Row 6 -->
+                                <tr class="group hover:bg-white/5 transition-colors">
+                                    <td class="px-6 py-4 text-center font-mono text-zinc-500">6</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&amp;w=100&amp;auto=format&amp;fit=crop" class="h-8 w-8 rounded-full object-cover">
+                                            <div>
+                                                <div class="text-white font-medium">NFT_Collector</div>
+                                                <div class="text-[10px] text-zinc-500">collect.sol</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-right font-mono text-zinc-300">445</td>
+                                    <td class="px-6 py-4 text-right font-mono text-zinc-500">0.44%</td>
+                                    <td class="px-6 py-4 text-right font-mono text-white">12.9 SOL</td>
+                                </tr>
+                                <!-- Row 7 -->
+                                <tr class="group hover:bg-white/5 transition-colors">
+                                    <td class="px-6 py-4 text-center font-mono text-zinc-500">7</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="h-8 w-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 font-medium">S</div>
+                                            <div>
+                                                <div class="text-white font-medium">SolanaLover</div>
+                                                <div class="text-[10px] text-zinc-500">9z...11a</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-right font-mono text-zinc-300">320</td>
+                                    <td class="px-6 py-4 text-right font-mono text-zinc-500">0.32%</td>
+                                    <td class="px-6 py-4 text-right font-mono text-white">8.5 SOL</td>
+                                </tr>
+                                <!-- Row 8 -->
+                                <tr class="group hover:bg-white/5 transition-colors">
+                                    <td class="px-6 py-4 text-center font-mono text-zinc-500">8</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="h-8 w-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400">
+                                                <span class="iconify" data-icon="lucide:user" data-width="14"></span>
+                                            </div>
+                                            <div>
+                                                <div class="text-zinc-400 font-medium italic">Anonymous</div>
+                                                <div class="text-[10px] text-zinc-500">1a...b2c</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-right font-mono text-zinc-300">210</td>
+                                    <td class="px-6 py-4 text-right font-mono text-zinc-500">0.21%</td>
+                                    <td class="px-6 py-4 text-right font-mono text-white">5.1 SOL</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <!-- Pagination -->
+                        <div class="border-t border-white/5 p-4 flex items-center justify-between text-xs text-zinc-500">
+                            <span>Showing 1-8 of 1,204</span>
+                            <div class="flex gap-2">
+                                <button class="px-2 py-1 hover:bg-white/5 rounded transition-colors disabled:opacity-50" disabled="">Previous</button>
+                                <button class="px-2 py-1 hover:bg-white/5 rounded transition-colors text-white">Next</button>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-              </div>
             </div>
 
-            <!-- Summary -->
-            <div
-              class="p-3 rounded bg-zinc-900/50 border border-white/5 space-y-2"
-            >
-              <div class="flex justify-between items-center text-xs">
-                <span class="text-zinc-500">Base Price</span>
-                <span class="text-zinc-300 font-mono">0.05 SOL</span>
-              </div>
-              <div class="flex justify-between items-center text-xs">
-                <span class="text-zinc-500">Network Fee</span>
-                <span class="text-zinc-300 font-mono">~0.00005 SOL</span>
-              </div>
-              <div class="h-px bg-white/5 w-full my-1"></div>
-              <div
-                class="flex justify-between items-center text-sm font-medium"
-              >
-                <span class="text-white">Total</span>
-                <div class="flex items-center gap-1.5">
-                  <span
-                    class="iconify text-purple-400"
-                    data-icon="lucide:coins"
-                    data-width="14"
-                    data-stroke-width="1.5"
-                  ></span>
-                  <span class="text-white font-mono tracking-tight"
-                    >0.05 SOL</span
-                  >
+            <!-- Right: User Stats Sidebar (Contextual) -->
+            <aside class="w-80 bg-zinc-950 border-l border-white/5 flex flex-col z-20 shadow-2xl">
+                
+                <!-- Tabs -->
+                <div class="flex border-b border-white/5">
+                    <button class="flex-1 py-3 text-xs font-medium text-zinc-500 hover:text-zinc-300 hover:bg-white/5 transition-colors">
+                        Selected
+                    </button>
+                    <button class="flex-1 py-3 text-xs font-medium text-zinc-500 hover:text-zinc-300 hover:bg-white/5 transition-colors">
+                        My Pixels
+                    </button>
+                    <button class="flex-1 py-3 text-xs font-medium text-white border-b border-purple-500 bg-white/5">
+                        Leaderboard
+                    </button>
                 </div>
-              </div>
-            </div>
-          </div>
 
-          <!-- Footer Action -->
-          <div
-            class="p-5 border-t border-white/5 bg-zinc-950/50 backdrop-blur-sm z-10"
-          >
-            <button
-              class="w-full group relative overflow-hidden rounded py-2.5 text-sm font-medium text-white transition-all hover:scale-[1.01]"
-            >
-              <div
-                class="absolute inset-0 bg-gradient-to-r from-purple-600 to-emerald-500 opacity-90 group-hover:opacity-100 transition-opacity"
-              ></div>
-              <div
-                class="absolute inset-0 opacity-0 group-hover:opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] transition-opacity"
-              ></div>
-              <span class="relative flex items-center justify-center gap-2">
-                Mint Pixel
-                <span
-                  class="iconify"
-                  data-icon="lucide:arrow-right"
-                  data-width="14"
-                  data-stroke-width="1.5"
-                ></span>
-              </span>
-            </button>
-            <p class="text-[10px] text-zinc-600 text-center mt-3">
-              By minting, you agree to the
-              <a href="#" class="text-zinc-500 hover:text-zinc-400 underline"
-                >Pixel Protocol Terms</a
-              >.
-            </p>
-          </div>
-        </aside>
-      </main>
+                <!-- Scrollable Content -->
+                <div class="flex-1 overflow-y-auto p-5 space-y-8">
+                    
+                    <!-- My Rank Card -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-sm font-medium text-white tracking-tight">Your Ranking</h2>
+                        </div>
+                        <div class="bg-gradient-to-br from-zinc-900 to-zinc-900 border border-white/10 rounded-lg p-4 relative overflow-hidden group">
+                            <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <span class="iconify" data-icon="lucide:bar-chart-2" data-width="64"></span>
+                            </div>
+                            
+                            <div class="flex flex-col gap-1 mb-4">
+                                <span class="text-[10px] text-zinc-500 uppercase tracking-wider">Current Rank</span>
+                                <span class="text-2xl font-mono font-medium text-white">#428</span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 border-t border-white/5 pt-4">
+                                <div>
+                                    <div class="text-[10px] text-zinc-500">Pixels Owned</div>
+                                    <div class="text-sm font-mono text-white mt-1">12</div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] text-zinc-500">Est. Value</div>
+                                    <div class="text-sm font-mono text-white mt-1">0.6 SOL</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Achievements / Badges -->
+                    <div class="space-y-4">
+                        <h2 class="text-sm font-medium text-white tracking-tight">Badges</h2>
+                        
+                        <div class="grid grid-cols-4 gap-2">
+                            <!-- Badge 1: Early Adopter -->
+                            <div class="aspect-square bg-purple-500/10 border border-purple-500/30 rounded flex items-center justify-center text-purple-400 relative group cursor-help">
+                                <span class="iconify" data-icon="lucide:zap" data-width="20"></span>
+                                <div class="absolute bottom-full mb-2 hidden group-hover:block bg-zinc-900 border border-white/10 px-2 py-1 text-[10px] text-white whitespace-nowrap rounded">Early Adopter</div>
+                            </div>
+                            <!-- Badge 2: Artist -->
+                            <div class="aspect-square bg-emerald-500/10 border border-emerald-500/30 rounded flex items-center justify-center text-emerald-400 relative group cursor-help">
+                                <span class="iconify" data-icon="lucide:palette" data-width="20"></span>
+                                <div class="absolute bottom-full mb-2 hidden group-hover:block bg-zinc-900 border border-white/10 px-2 py-1 text-[10px] text-white whitespace-nowrap rounded">Pixel Artist</div>
+                            </div>
+                            <!-- Locked -->
+                            <div class="aspect-square bg-zinc-900 border border-white/5 rounded flex items-center justify-center text-zinc-700">
+                                <span class="iconify" data-icon="lucide:lock" data-width="16"></span>
+                            </div>
+                            <!-- Locked -->
+                            <div class="aspect-square bg-zinc-900 border border-white/5 rounded flex items-center justify-center text-zinc-700">
+                                <span class="iconify" data-icon="lucide:lock" data-width="16"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="space-y-3">
+                        <h2 class="text-sm font-medium text-white tracking-tight">Recent Grid Activity</h2>
+                        <div class="space-y-3">
+                            <!-- Item -->
+                            <div class="flex items-start gap-3 text-xs">
+                                <div class="mt-0.5 h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
+                                <div>
+                                    <p class="text-zinc-300">
+                                        <span class="text-white font-medium">CryptoKing</span> acquired 10x10 block
+                                    </p>
+                                    <p class="text-zinc-600 mt-0.5">2 mins ago</p>
+                                </div>
+                            </div>
+                             <!-- Item -->
+                             <div class="flex items-start gap-3 text-xs">
+                                <div class="mt-0.5 h-1.5 w-1.5 rounded-full bg-purple-500"></div>
+                                <div>
+                                    <p class="text-zinc-300">
+                                        <span class="text-white font-medium">Aliceverse</span> overwrote <span class="text-zinc-500">#892</span>
+                                    </p>
+                                    <p class="text-zinc-600 mt-0.5">15 mins ago</p>
+                                </div>
+                            </div>
+                             <!-- Item -->
+                             <div class="flex items-start gap-3 text-xs">
+                                <div class="mt-0.5 h-1.5 w-1.5 rounded-full bg-zinc-700"></div>
+                                <div>
+                                    <p class="text-zinc-300">
+                                        <span class="text-white font-medium">New User</span> joined
+                                    </p>
+                                    <p class="text-zinc-600 mt-0.5">1 hr ago</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Footer Action -->
+                <div class="p-5 border-t border-white/5 bg-zinc-950/50 backdrop-blur-sm z-10">
+                    <button class="w-full border border-white/10 hover:bg-white/5 text-zinc-300 rounded py-2 text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                        <span class="iconify" data-icon="lucide:share-2" data-width="14"></span>
+                        Share Profile
+                    </button>
+                </div>
+            </aside>
+        </main>
     </div>
 
-    <!-- Notification Toast (Static) -->
-    <div class="fixed bottom-6 right-6 z-50 animate-bounce">
-      <div
-        class="bg-zinc-900 border border-emerald-500/20 text-emerald-100 text-xs px-4 py-3 rounded shadow-2xl flex items-center gap-3"
-      >
-        <span class="flex h-2 w-2 relative">
-          <span
-            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"
-          ></span>
-          <span
-            class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"
-          ></span>
-        </span>
-        <span class="font-medium">New pixel minted at (890, 120)</span>
-      </div>
-    </div>
-  </body>
-</html>
+
+</body></html>

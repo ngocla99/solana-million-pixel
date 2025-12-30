@@ -1,16 +1,22 @@
 "use client";
 
+import { useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useSidebar } from "@/features/pixels-grid/context/sidebar-context";
 import { PixelMintForm } from "@/features/pixels-grid/components/pixel-mint-form";
+import { LeaderboardSidebar } from "@/features/leaderboard/components/leaderboard-sidebar";
 
-interface SidebarProps {
-  onSubmit: (data: { image: File | null; linkUrl: string }) => void;
-  isSubmitting?: boolean;
-}
+type ActiveTab = "selected" | "my-pixels" | "leaderboard";
 
-export function Sidebar({ onSubmit, isSubmitting }: SidebarProps) {
-  const { activeTab, setActiveTab } = useSidebar();
+const getActiveTab = (pathname: string): ActiveTab => {
+  if (pathname === "/my-pixels") return "my-pixels";
+  if (pathname === "/leaderboard") return "leaderboard";
+  return "selected";
+};
+
+export function Sidebar() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const activeTab = getActiveTab(pathname);
 
   return (
     <aside className="w-80 bg-zinc-950 border-l border-white/5 flex flex-col z-20 shadow-2xl overflow-hidden">
@@ -19,7 +25,15 @@ export function Sidebar({ onSubmit, isSubmitting }: SidebarProps) {
         {(["selected", "my-pixels", "leaderboard"] as const).map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => {
+              if (tab === "my-pixels") {
+                router.push("/my-pixels");
+              } else if (tab === "leaderboard") {
+                router.push("/leaderboard");
+              } else {
+                router.push("/");
+              }
+            }}
             className={cn(
               "flex-1 py-3 text-[10px] uppercase tracking-wider font-semibold transition-colors",
               activeTab === tab
@@ -35,14 +49,16 @@ export function Sidebar({ onSubmit, isSubmitting }: SidebarProps) {
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto p-5 space-y-8">
         {activeTab === "selected" && (
-          <PixelMintForm onSubmit={onSubmit} isSubmitting={isSubmitting} />
+          <PixelMintForm />
         )}
 
-        {activeTab !== "selected" && (
+        {activeTab === "my-pixels" && (
           <div className="flex flex-col items-center justify-center h-40 text-zinc-600 italic text-xs">
             Coming soon...
           </div>
         )}
+
+        {activeTab === "leaderboard" && <LeaderboardSidebar />}
       </div>
     </aside>
   );

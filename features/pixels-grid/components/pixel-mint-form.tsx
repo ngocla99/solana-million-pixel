@@ -1,9 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "@tanstack/react-form";
-import { z } from "zod";
-import { cn } from "@/lib/utils";
 import {
   Field,
   FieldDescription,
@@ -11,15 +7,23 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import {
-  useBlockSize,
-  setBlockSize,
-  useSelection,
-  useIsChecking,
-  useIsAvailable,
-} from "../stores/use-grid-store";
+import { cn } from "@/lib/utils";
 import { CircleNotchIcon } from "@phosphor-icons/react";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { useForm } from "@tanstack/react-form";
 import Image from "next/image";
+import { useState } from "react";
+import { toast } from "sonner";
+import { z } from "zod";
+import { useCreateSpot } from "../api/create-spot";
+import { useUploadSpotImage } from "../api/upload-spot-image";
+import {
+  setBlockSize,
+  useBlockSize,
+  useIsAvailable,
+  useIsChecking,
+  useSelection,
+} from "../stores/use-grid-store";
 
 const formSchema = z.object({
   image: z
@@ -30,17 +34,23 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface PixelMintFormProps {
-  onSubmit: (data: { image: File | null; linkUrl: string }) => void;
-  isSubmitting?: boolean;
-}
 
-export function PixelMintForm({ onSubmit, isSubmitting }: PixelMintFormProps) {
+export function PixelMintForm() {
   const [previewUrl, setPreviewUrl] = useState("");
   const blockSize = useBlockSize();
   const selection = useSelection();
   const isChecking = useIsChecking();
   const isAvailable = useIsAvailable();
+  
+  // Wallet and connection hooks
+  const { publicKey } = useWallet();
+  const { connection } = useConnection();
+  
+  // API mutation hooks
+  const createSpotMutation = useCreateSpot();
+  const uploadImageMutation = useUploadSpotImage();
+  
+  const isSubmitting = createSpotMutation.isPending || uploadImageMutation.isPending;
 
   const x = selection ? Math.min(selection.startX, selection.endX) : 0;
   const y = selection ? Math.min(selection.startY, selection.endY) : 0;
@@ -62,10 +72,54 @@ export function PixelMintForm({ onSubmit, isSubmitting }: PixelMintFormProps) {
       onChange: formSchema,
     },
     onSubmit: async ({ value }) => {
-      onSubmit({
-        image: value.image,
-        linkUrl: value.linkUrl,
-      });
+      if (!publicKey) {
+        toast.error("Please connect your wallet first");
+        return;
+      }
+      
+      if (!selection) {
+        toast.error("Please select a spot first");
+        return;
+      }
+      
+      if (!value.image) {
+        toast.error("Please upload an image");
+        return;
+      }
+      
+      try {
+        // Calculate spot dimensions
+        const x = Math.min(selection.startX, selection.endX);
+        const y = Math.min(selection.startY, selection.endY);
+        const spotWidth = Math.abs(selection.endX - selection.startX) + 1;
+        const spotHeight = Math.abs(selection.endY - selection.startY) + 1;
+        
+        // First create the spot
+        const spotResult = await createSpotMutation.mutateAsync({
+          x,
+          y,
+          width: spotWidth,
+          height: spotHeight,
+          link_url: value.linkUrl,
+          owner_wallet: publicKey.toBase58(),
+        });
+        
+        // Then upload the image
+        await uploadImageMutation.mutateAsync({
+          file: value.image,
+          spotId: spotResult.spot.id,
+        });
+        
+        toast.success("Pixel minted successfully!");
+        
+        // Reset form
+        setPreviewUrl("");
+        form.reset();
+        
+      } catch (error) {
+        console.error("Minting failed:", error);
+        toast.error("Failed to mint pixel. Please try again.");
+      }
     },
   });
 
