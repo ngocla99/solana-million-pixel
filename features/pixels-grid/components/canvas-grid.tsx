@@ -68,6 +68,7 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
   const blockSize = useBlockSize();
   const blockSizeNum = getBlockSizeNumber(blockSize);
 
+  const [isInitialized, setIsInitialized] = useState(false);
   const [hoveredSpot, setHoveredSpot] = useState<{
     x: number;
     y: number;
@@ -87,6 +88,7 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
 
   // Fetch spots using TanStack Query
   const { data: spotsData } = useSpots();
+  console.log("🚀 ~ CanvasGrid ~ spotsData:", spotsData);
 
   // Get current viewport state for coordinate conversion
   const getViewportState = useCallback(() => {
@@ -222,6 +224,9 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
 
       window.addEventListener("resize", handleResize);
 
+      // Mark as initialized
+      setIsInitialized(true);
+
       return () => {
         window.removeEventListener("resize", handleResize);
       };
@@ -231,6 +236,7 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
 
     return () => {
       destroyed = true;
+      setIsInitialized(false);
       if (appRef.current) {
         appRef.current.destroy(true);
         appRef.current = null;
@@ -238,12 +244,19 @@ export function CanvasGrid({ onSelectionComplete }: CanvasGridProps) {
     };
   }, []);
 
-  // Render sold spots when data is available
+  // Render sold spots when data is available and PixiJS is initialized
   useEffect(() => {
-    if (spotsData?.spots && soldSpotsContainerRef.current) {
-      renderSoldSpots(soldSpotsContainerRef.current, spotsData.spots);
+    if (!isInitialized || !spotsData?.spots || !soldSpotsContainerRef.current) {
+      return;
     }
-  }, [spotsData]);
+
+    // Call async function and handle errors
+    renderSoldSpots(soldSpotsContainerRef.current, spotsData.spots).catch(
+      (error) => {
+        console.error("Failed to render sold spots:", error);
+      }
+    );
+  }, [isInitialized, spotsData]);
 
   // Handle mouse events
   useEffect(() => {

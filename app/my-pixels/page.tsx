@@ -10,7 +10,6 @@ export default function MyPixelsPage() {
         <div className="flex-1 bg-zinc-950 relative overflow-hidden p-6">
           <div className="max-w-md">
             <h1 className="text-xl font-semibold text-white mb-6">My Pixels</h1>
-            <PixelMintForm />
           </div>
         </div>
         {/* Right: Interaction Sidebar */}
